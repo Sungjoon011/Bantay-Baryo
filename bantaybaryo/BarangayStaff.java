@@ -1,4 +1,4 @@
-package bantaybaryo
+package bantaybaryo;
 
 public class BarangayStaff extends User {
     // Staff-specific encapsulated variable
