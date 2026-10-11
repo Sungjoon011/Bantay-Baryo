@@ -1,600 +1,1001 @@
 package bantaybaryo;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class Main extends JFrame {
-    private final CardLayout cardLayout = new CardLayout();
-    private final JPanel cardPanel = new JPanel(cardLayout);
-    private User currentUser;
+    private static final Color PRIMARY = Color.decode("#1E3A8A");
+    private static final Color SECONDARY = Color.decode("#0284C7");
+    private static final Color BACKGROUND = Color.decode("#F8FAFC");
+    private static final Color TEXT = Color.decode("#0F172A");
+    private static final Color MUTED = Color.decode("#6B7280");
+    private static final Color BORDER = Color.decode("#E2E8F0");
+    private static final Color PENDING = Color.decode("#F59E0B");
+    private static final Color PROGRESS = Color.decode("#2563EB");
+    private static final Color RESOLVED = Color.decode("#10B981");
+
+    private final CardLayout mainLayout = new CardLayout();
+    private final JPanel mainPanel = new JPanel(mainLayout);
     private final ArrayList<User> users = new ArrayList<>();
     private final ArrayList<Report> reports = new ArrayList<>();
+
+    private User currentUser;
+    private JLabel dashboardWelcome;
+    private JLabel dashboardRole;
+    private JPanel dashboardContent;
+    private CardLayout contentLayout;
+    private JLabel pendingValue;
+    private JLabel progressValue;
+    private JLabel resolvedValue;
+    private JLabel totalValue;
     private DefaultListModel<String> reportListModel;
     private JList<String> reportList;
+    private DefaultListModel<String> residentReportListModel;
+    private JList<String> residentReportList;
+    private DefaultListModel<String> overviewReportListModel;
+    private JList<String> overviewReportList;
     private JLabel summaryLabel;
-    private JLabel welcomeLabel;
-    private JLabel subWelcomeLabel;
+    private JLabel overviewTitle;
+    private JButton residentNavigation;
+    private JButton myReportsNavigation;
+    private JButton staffNavigation;
+    private JButton activeSidebarButton;
+    private String overviewStatusFilter;
 
     public Main() {
-        setTitle("Bantay-Baryo System");
+        setTitle("Bantay Baryo - Community Incident Management System");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000, 700);
+        setSize(1150, 760);
+        setMinimumSize(new Dimension(1000, 680));
         setLocationRelativeTo(null);
-        setResizable(false);
 
         seedData();
-        buildLoginScreen();
-        buildDashboard();
-
-        add(cardPanel);
+        mainPanel.add(buildHomePanel(), "home");
+        mainPanel.add(buildLoginPanel(), "login");
+        mainPanel.add(buildDashboardPanel(), "dashboard");
+        add(mainPanel);
+        mainLayout.show(mainPanel, "home");
     }
 
     private void seedData() {
-        users.add(new Resident(
-                "R-1001",
-                "Maria",
-                "Dela",
-                "Cruz",
-                "mcruz",
-                "pass123",
-                "Purok 2",
-                "Bahay ng Lahat"
-        ));
+        users.add(new Resident("R-1001", "Maria", "Dela", "Cruz", "mcruz", "pass123", "Purok 2", "Bahay ng Lahat"));
+        users.add(new BarangayStaff("S-2001", "Jose", "", "Santos", "jsantos", "admin123", "Community Officer"));
 
-        users.add(new BarangayStaff(
-                "S-2001",
-                "Jose",
-                "",
-                "Santos",
-                "jsantos",
-                "admin123",
-                "Community Officer"
-        ));
-
-        reports.add(new IncidentReport(
-                "IR-3001",
-                "R-1001",
-                "Public Safety",
-                "Barangay Hall",
+        reports.add(new IncidentReport("IR-3001", "R-1001", "Public Safety", "Barangay Hall",
                 "A noise disturbance and fight occurred near the covered court.",
-                "2026-10-07",
-                "PENDING",
-                "Maria Cruz and Juan Dela Torre"
-        ));
-
-        reports.add(new ComplaintReport(
-                "CR-3002",
-                "R-1001",
-                "Garbage Disposal",
-                "Purok 5",
+                "2026-10-07", "PENDING", "Maria Cruz and Juan Dela Torre"));
+        reports.add(new ComplaintReport("CR-3002", "R-1001", "Garbage Disposal", "Purok 5",
                 "Uncollected trash has been piling up near the drainage canal.",
-                "2026-10-07",
-                "IN_PROGRESS",
-                "Barangay Waste Team"
-        ));
+                "2026-10-07", "IN_PROGRESS", "Barangay Waste Team"));
     }
 
-    private void buildLoginScreen() {
-        JPanel loginPanel = new JPanel(new GridBagLayout());
-        loginPanel.setBackground(new Color(233, 240, 246));
-        loginPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+    private JPanel buildHomePanel() {
+        JPanel root = new JPanel(new BorderLayout());
+        root.setBackground(BACKGROUND);
 
-        JPanel loginCard = new JPanel(new GridBagLayout());
-        loginCard.setBackground(Color.WHITE);
-        loginCard.setPreferredSize(new Dimension(500, 520));
-        loginCard.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(210, 220, 229), 1),
-                BorderFactory.createEmptyBorder(28, 28, 28, 28)
-        ));
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        JPanel logoPanel = new JPanel();
-        logoPanel.setOpaque(false);
-        logoPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-        JLabel logoLabel = new JLabel(createLogoIcon());
-        logoPanel.add(logoLabel);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        loginCard.add(logoPanel, gbc);
-
-        JLabel appTitle = new JLabel("Bantay-Baryo");
-        appTitle.setFont(new Font("SansSerif", Font.BOLD, 32));
-        appTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        appTitle.setForeground(new Color(16, 63, 98));
-        gbc.gridy = 1;
-        loginCard.add(appTitle, gbc);
-
-        JLabel loginTitle = new JLabel("Welcome");
-        loginTitle.setFont(new Font("SansSerif", Font.BOLD, 24));
-        loginTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        gbc.gridy = 2;
-        loginCard.add(loginTitle, gbc);
-
-        JLabel subtitle = new JLabel("Sign in to access your barangay account");
-        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        subtitle.setHorizontalAlignment(SwingConstants.CENTER);
-        subtitle.setForeground(new Color(98, 112, 124));
-        gbc.gridy = 3;
-        loginCard.add(subtitle, gbc);
-
-        JLabel userLabel = new JLabel("Username");
-        userLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
-        gbc.gridy = 4;
-        gbc.gridwidth = 1;
-        loginCard.add(userLabel, gbc);
-
-        JTextField usernameField = new JTextField(22);
-        usernameField.setPreferredSize(new Dimension(0, 38));
-        gbc.gridx = 1;
-        loginCard.add(usernameField, gbc);
-
-        JLabel passLabel = new JLabel("Password");
-        passLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
-        gbc.gridx = 0;
-        gbc.gridy = 5;
-        loginCard.add(passLabel, gbc);
-
-        JPasswordField passwordField = new JPasswordField(22);
-        passwordField.setPreferredSize(new Dimension(0, 38));
-        gbc.gridx = 1;
-        loginCard.add(passwordField, gbc);
-
-        JButton loginButton = new JButton("Login");
-        loginButton.setBackground(new Color(19, 116, 178));
-        loginButton.setForeground(Color.WHITE);
-        loginButton.setFocusPainted(false);
-        loginButton.setFont(new Font("SansSerif", Font.BOLD, 14));
-        loginButton.setPreferredSize(new Dimension(240, 42));
-        gbc.gridx = 0;
-        gbc.gridy = 6;
-        gbc.gridwidth = 2;
-        loginCard.add(loginButton, gbc);
-
-        JLabel infoLabel = new JLabel("Demo: mcruz / pass123  |  jsantos / admin123");
-        infoLabel.setFont(new Font("SansSerif", Font.ITALIC, 12));
-        infoLabel.setForeground(new Color(96, 108, 120));
-        infoLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        gbc.gridy = 7;
-        loginCard.add(infoLabel, gbc);
-
-        loginButton.addActionListener(e -> {
-            String username = usernameField.getText().trim();
-            String password = new String(passwordField.getPassword());
-            User user = authenticate(username, password);
-
-            if (user == null) {
-                JOptionPane.showMessageDialog(this, "Invalid username or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
-                passwordField.setText("");
-                return;
+        JPanel nav = new JPanel(new BorderLayout());
+        nav.setBackground(PRIMARY);
+        nav.setBorder(new EmptyBorder(14, 32, 14, 32));
+        JLabel brand = new JLabel("Bantay-Baryo");
+        brand.setForeground(Color.WHITE);
+        brand.setFont(new Font("SansSerif", Font.BOLD, 24));
+        JButton loginButton = createPrimaryButton("Login");
+        loginButton.setPreferredSize(new Dimension(125, 42));
+        loginButton.setBorderPainted(true);
+        loginButton.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.WHITE, 2),
+                new EmptyBorder(8, 19, 8, 19)));
+        loginButton.setToolTipText("Open the Bantay-Baryo login screen");
+        loginButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent event) {
+                loginButton.setBackground(SECONDARY);
+                loginButton.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(Color.WHITE, 2),
+                        new EmptyBorder(8, 19, 8, 19)));
             }
 
-            currentUser = user;
-            updateDashboardForUser();
-            cardLayout.show(cardPanel, "dashboard");
-            usernameField.setText("");
-            passwordField.setText("");
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent event) {
+                loginButton.setBackground(PRIMARY);
+                loginButton.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(Color.WHITE, 2),
+                        new EmptyBorder(8, 19, 8, 19)));
+            }
+
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent event) {
+                loginButton.setBackground(new Color(15, 55, 105));
+            }
+
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent event) {
+                if (loginButton.contains(event.getPoint())) {
+                    loginButton.setBackground(SECONDARY);
+                }
+            }
         });
+        loginButton.addActionListener(e -> mainLayout.show(mainPanel, "login"));
+        nav.add(brand, BorderLayout.WEST);
+        nav.add(loginButton, BorderLayout.EAST);
 
-        loginPanel.add(loginCard);
-        cardPanel.add(loginPanel, "login");
-        cardLayout.show(cardPanel, "login");
+        JPanel content = new JPanel();
+        content.setOpaque(false);
+        content.setBorder(new EmptyBorder(58, 55, 45, 55));
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+
+        JLabel title = centeredLabel("Your Community. Your Voice. Your Safety.", 32, PRIMARY, Font.BOLD);
+        JLabel subtitle = centeredLabel("A simple digital platform for reporting and tracking barangay concerns.",
+                16, MUTED, Font.PLAIN);
+        JPanel cards = new JPanel(new GridLayout(1, 3, 18, 0));
+        cards.setOpaque(false);
+        cards.setMaximumSize(new Dimension(950, 170));
+        cards.add(createInfoCard("01", "Submit Reports", "Residents can file incidents and complaints with location and details."));
+        cards.add(createInfoCard("02", "Track Progress", "Follow a report from Pending to In Progress and finally Resolved."));
+        cards.add(createInfoCard("03", "Community Response", "Barangay staff can review and update community reports."));
+
+        JLabel note = centeredLabel("Accounts are created and managed by the Barangay Administrator.",
+                13, MUTED, Font.PLAIN);
+        content.add(title);
+        content.add(Box.createVerticalStrut(12));
+        content.add(subtitle);
+        content.add(Box.createVerticalStrut(38));
+        content.add(cards);
+        content.add(Box.createVerticalStrut(30));
+        content.add(note);
+
+        root.add(nav, BorderLayout.NORTH);
+        root.add(new JScrollPane(content), BorderLayout.CENTER);
+        return root;
     }
 
-    private void buildDashboard() {
-        JPanel dashboardPanel = new JPanel(new BorderLayout(14, 14));
-        dashboardPanel.setBackground(new Color(239, 244, 249));
-        dashboardPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setOpaque(false);
-
-        JPanel titlePanel = new JPanel();
-        titlePanel.setOpaque(false);
-        titlePanel.setLayout(new BorderLayout(12, 0));
-
-        JLabel logoMini = new JLabel(createLogoIconSmall());
-        titlePanel.add(logoMini, BorderLayout.WEST);
-
-        JPanel textPanel = new JPanel();
-        textPanel.setOpaque(false);
-        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
-
-        welcomeLabel = new JLabel("Welcome");
-        welcomeLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
-        welcomeLabel.setForeground(new Color(15, 45, 70));
-        textPanel.add(welcomeLabel);
-
-        subWelcomeLabel = new JLabel("Barangay operations overview");
-        subWelcomeLabel.setForeground(new Color(92, 107, 122));
-        subWelcomeLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        textPanel.add(subWelcomeLabel);
-
-        titlePanel.add(textPanel, BorderLayout.CENTER);
-        headerPanel.add(titlePanel, BorderLayout.WEST);
-
-        JButton logoutButton = new JButton("Logout");
-        logoutButton.setBackground(new Color(40, 69, 94));
-        logoutButton.setForeground(Color.WHITE);
-        logoutButton.setFocusPainted(false);
-        logoutButton.setPreferredSize(new Dimension(110, 38));
-        logoutButton.addActionListener(e -> cardLayout.show(cardPanel, "login"));
-        headerPanel.add(logoutButton, BorderLayout.EAST);
-
-        dashboardPanel.add(headerPanel, BorderLayout.NORTH);
-
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.setFont(new Font("SansSerif", Font.BOLD, 13));
-        tabbedPane.setBackground(new Color(255, 255, 255));
-        tabbedPane.addTab("Overview", buildOverviewPanel());
-        tabbedPane.addTab("Resident", buildResidentPanel());
-        tabbedPane.addTab("Staff", buildStaffPanel());
-        dashboardPanel.add(tabbedPane, BorderLayout.CENTER);
-
-        cardPanel.add(dashboardPanel, "dashboard");
-    }
-
-    private JPanel buildOverviewPanel() {
-        JPanel panel = new JPanel(new BorderLayout(14, 14));
-        panel.setBackground(new Color(245, 248, 251));
-        panel.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
-
-        JPanel statsPanel = new JPanel(new GridLayout(1, 4, 12, 12));
-        statsPanel.setOpaque(false);
-        statsPanel.add(createStatCard("Pending", "0", new Color(230, 169, 61)));
-        statsPanel.add(createStatCard("In Progress", "0", new Color(41, 128, 185)));
-        statsPanel.add(createStatCard("Resolved", "0", new Color(46, 125, 50)));
-        statsPanel.add(createStatCard("Total", "0", new Color(94, 108, 122)));
-        panel.add(statsPanel, BorderLayout.NORTH);
-
-        JLabel titleLabel = new JLabel("Community Overview");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
-        titleLabel.setForeground(new Color(20, 40, 59));
-        panel.add(titleLabel, BorderLayout.CENTER);
-
-        JTextArea overviewArea = new JTextArea();
-        overviewArea.setEditable(false);
-        overviewArea.setBackground(new Color(255, 255, 255));
-        overviewArea.setBorder(BorderFactory.createLineBorder(new Color(214, 222, 230), 1));
-        overviewArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
-        overviewArea.setLineWrap(true);
-        overviewArea.setWrapStyleWord(true);
-        panel.add(new JScrollPane(overviewArea), BorderLayout.CENTER);
-
-        summaryLabel = new JLabel();
-        summaryLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        summaryLabel.setForeground(new Color(37, 58, 75));
-        summaryLabel.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
-        panel.add(summaryLabel, BorderLayout.SOUTH);
-
-        updateOverviewText(overviewArea);
-        return panel;
-    }
-
-    private JPanel createStatCard(String label, String value, Color color) {
-        JPanel card = new JPanel();
-        card.setBackground(Color.WHITE);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 226, 232), 1),
-                BorderFactory.createEmptyBorder(14, 14, 14, 14)
-        ));
-        card.setLayout(new BorderLayout());
-
-        JLabel valueLabel = new JLabel(value);
-        valueLabel.setFont(new Font("SansSerif", Font.BOLD, 30));
-        valueLabel.setForeground(color);
-
-        JLabel titleLabel = new JLabel(label);
-        titleLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        titleLabel.setForeground(new Color(100, 114, 126));
-
-        card.add(valueLabel, BorderLayout.NORTH);
-        card.add(titleLabel, BorderLayout.SOUTH);
+    private JPanel createInfoCard(String number, String heading, String description) {
+        JPanel card = createCard();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBorder(new EmptyBorder(20, 20, 20, 20));
+        JLabel numberLabel = new JLabel(number);
+        numberLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        numberLabel.setForeground(SECONDARY);
+        JLabel headingLabel = new JLabel(heading);
+        headingLabel.setFont(new Font("SansSerif", Font.BOLD, 17));
+        headingLabel.setForeground(TEXT);
+        JLabel descriptionLabel = new JLabel("<html><div style='width:220px'>" + description + "</div></html>");
+        descriptionLabel.setForeground(MUTED);
+        card.add(numberLabel);
+        card.add(Box.createVerticalStrut(8));
+        card.add(headingLabel);
+        card.add(Box.createVerticalStrut(8));
+        card.add(descriptionLabel);
         return card;
     }
 
-    private ImageIcon createLogoIcon() {
-        int size = 70;
-        BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = image.createGraphics();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    private JPanel buildLoginPanel() {
+        JPanel root = new JPanel(new GridBagLayout());
+        root.setBackground(BACKGROUND);
+        JPanel card = createCard();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER),
+                new EmptyBorder(30, 38, 30, 38)));
+        card.setPreferredSize(new Dimension(420, 450));
 
-        g2.setColor(new Color(19, 116, 178));
-        g2.fillRoundRect(10, 10, 50, 50, 16, 16);
+        JLabel logo = new JLabel(createLogoIcon());
+        logo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel title = centeredLabel("Bantay-Baryo", 24, PRIMARY, Font.BOLD);
+        JLabel subtitle = centeredLabel("Login to your barangay account", 13, MUTED, Font.PLAIN);
+        JTextField username = new JTextField("mcruz");
+        JPasswordField password = new JPasswordField("pass123");
+        username.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
+        password.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
+        JCheckBox showPassword = new JCheckBox("Show Password");
+        showPassword.setOpaque(false);
+        showPassword.setAlignmentX(Component.CENTER_ALIGNMENT);
+        showPassword.addActionListener(e -> password.setEchoChar(showPassword.isSelected() ? (char) 0 : '•'));
 
-        g2.setColor(Color.WHITE);
-        g2.setFont(new Font("SansSerif", Font.BOLD, 28));
-        FontMetrics fm = g2.getFontMetrics();
-        String text = "B";
-        int x = (size - fm.stringWidth(text)) / 2;
-        int y = (size - fm.getHeight()) / 2 + fm.getAscent();
-        g2.drawString(text, x, y);
-        g2.dispose();
-        return new ImageIcon(image);
+        JButton signIn = createPrimaryButton("Sign In");
+        signIn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        signIn.setPreferredSize(new Dimension(260, 44));
+        signIn.setMaximumSize(new Dimension(260, 44));
+        signIn.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(PRIMARY, 1),
+                new EmptyBorder(10, 24, 10, 24)));
+        signIn.setToolTipText("Sign in to your Bantay-Baryo account");
+        signIn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent event) {
+                signIn.setBackground(SECONDARY);
+                signIn.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(PRIMARY, 2),
+                        new EmptyBorder(9, 23, 9, 23)));
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent event) {
+                signIn.setBackground(PRIMARY);
+                signIn.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(PRIMARY, 1),
+                        new EmptyBorder(10, 24, 10, 24)));
+            }
+
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent event) {
+                signIn.setBackground(new Color(15, 55, 105));
+            }
+
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent event) {
+                if (signIn.contains(event.getPoint())) {
+                    signIn.setBackground(SECONDARY);
+                }
+            }
+        });
+        JButton back = new JButton("← Back to Home");
+        back.setBorderPainted(false);
+        back.setContentAreaFilled(false);
+        back.setForeground(SECONDARY);
+        back.setAlignmentX(Component.CENTER_ALIGNMENT);
+        back.addActionListener(e -> mainLayout.show(mainPanel, "home"));
+        signIn.addActionListener(e -> {
+            User user = authenticate(username.getText().trim(), new String(password.getPassword()));
+            if (user == null) {
+                JOptionPane.showMessageDialog(this, "Invalid username or password.", "Login Failed",
+                        JOptionPane.ERROR_MESSAGE);
+                password.setText("");
+                return;
+            }
+            currentUser = user;
+            updateDashboardForUser();
+            mainLayout.show(mainPanel, "dashboard");
+            username.setText("");
+            password.setText("");
+        });
+
+        card.add(logo);
+        card.add(Box.createVerticalStrut(8));
+        card.add(title);
+        card.add(Box.createVerticalStrut(5));
+        card.add(subtitle);
+        card.add(Box.createVerticalStrut(24));
+        card.add(createFormRow("Username", username));
+        card.add(Box.createVerticalStrut(12));
+        card.add(createFormRow("Password", password));
+        JLabel demoAccounts = new JLabel("<html><div style='text-align:center'>Demo accounts:<br>"
+                + "Resident: mcruz / pass123<br>Staff: jsantos / admin123</div></html>");
+        demoAccounts.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        demoAccounts.setForeground(MUTED);
+        demoAccounts.setHorizontalAlignment(SwingConstants.CENTER);
+        demoAccounts.setAlignmentX(Component.CENTER_ALIGNMENT);
+        card.add(Box.createVerticalStrut(6));
+        card.add(demoAccounts);
+        card.add(Box.createVerticalStrut(8));
+        card.add(showPassword);
+        card.add(Box.createVerticalStrut(20));
+        card.add(signIn);
+        card.add(Box.createVerticalStrut(10));
+        card.add(back);
+        root.add(card);
+        return root;
     }
 
-    private ImageIcon createLogoIconSmall() {
-        int size = 42;
-        BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = image.createGraphics();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    private JPanel buildDashboardPanel() {
+        JPanel root = new JPanel(new BorderLayout());
+        root.setBackground(BACKGROUND);
 
-        g2.setColor(new Color(19, 116, 178));
-        g2.fillRoundRect(5, 5, 32, 32, 10, 10);
+        JPanel topBar = new JPanel(new BorderLayout());
+        topBar.setBackground(Color.WHITE);
+        topBar.setBorder(new EmptyBorder(16, 28, 16, 28));
+        JPanel heading = new JPanel(new BorderLayout(12, 0));
+        heading.setOpaque(false);
+        heading.add(new JLabel(createLogoIconSmall()), BorderLayout.WEST);
+        JPanel headingText = new JPanel();
+        headingText.setOpaque(false);
+        headingText.setLayout(new BoxLayout(headingText, BoxLayout.Y_AXIS));
+        dashboardWelcome = new JLabel("Welcome");
+        dashboardWelcome.setFont(new Font("SansSerif", Font.BOLD, 22));
+        dashboardWelcome.setForeground(TEXT);
+        dashboardRole = new JLabel("Community overview");
+        dashboardRole.setForeground(MUTED);
+        headingText.add(dashboardWelcome);
+        headingText.add(dashboardRole);
+        heading.add(headingText, BorderLayout.CENTER);
+        JButton logout = createSecondaryButton("Logout");
+        logout.addActionListener(e -> {
+            currentUser = null;
+            mainLayout.show(mainPanel, "login");
+        });
+        topBar.add(heading, BorderLayout.WEST);
+        topBar.add(logout, BorderLayout.EAST);
 
-        g2.setColor(Color.WHITE);
-        g2.setFont(new Font("SansSerif", Font.BOLD, 18));
-        FontMetrics fm = g2.getFontMetrics();
-        String text = "B";
-        int x = (size - fm.stringWidth(text)) / 2;
-        int y = (size - fm.getHeight()) / 2 + fm.getAscent();
-        g2.drawString(text, x, y);
-        g2.dispose();
-        return new ImageIcon(image);
+        JPanel body = new JPanel(new BorderLayout());
+        body.setBackground(BACKGROUND);
+        JPanel sidebar = new JPanel();
+        sidebar.setBackground(Color.WHITE);
+        sidebar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 1, BORDER),
+                new EmptyBorder(16, 14, 16, 14)));
+        sidebar.setPreferredSize(new Dimension(205, 0));
+        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
+        dashboardContent = new JPanel();
+        contentLayout = new CardLayout();
+        dashboardContent.setLayout(contentLayout);
+        dashboardContent.setBackground(BACKGROUND);
+
+        JButton overview = createSidebarButton("Overview");
+        residentNavigation = createSidebarButton("Submit a Report");
+        myReportsNavigation = createSidebarButton("My Reports");
+        staffNavigation = createSidebarButton("Report Queue");
+        overview.addActionListener(e -> {
+            activateSidebarButton(overview);
+            contentLayout.show(dashboardContent, "overview");
+        });
+        residentNavigation.addActionListener(e -> {
+            activateSidebarButton(residentNavigation);
+            contentLayout.show(dashboardContent, "resident");
+        });
+        myReportsNavigation.addActionListener(e -> {
+            activateSidebarButton(myReportsNavigation);
+            updateResidentReportList();
+            contentLayout.show(dashboardContent, "myReports");
+        });
+        staffNavigation.addActionListener(e -> {
+            activateSidebarButton(staffNavigation);
+            contentLayout.show(dashboardContent, "staff");
+        });
+        sidebar.add(Box.createVerticalStrut(2));
+        sidebar.add(overview);
+        sidebar.add(Box.createVerticalStrut(10));
+        sidebar.add(residentNavigation);
+        sidebar.add(Box.createVerticalStrut(10));
+        sidebar.add(myReportsNavigation);
+        sidebar.add(Box.createVerticalStrut(10));
+        sidebar.add(staffNavigation);
+        activateSidebarButton(overview);
+
+        dashboardContent.add(buildOverviewPanel(), "overview");
+        dashboardContent.add(buildResidentPanel(), "resident");
+        dashboardContent.add(buildMyReportsPanel(), "myReports");
+        dashboardContent.add(buildStaffPanel(), "staff");
+        body.add(sidebar, BorderLayout.WEST);
+        body.add(dashboardContent, BorderLayout.CENTER);
+        root.add(topBar, BorderLayout.NORTH);
+        root.add(body, BorderLayout.CENTER);
+        return root;
+    }
+
+    private JPanel buildOverviewPanel() {
+        JPanel panel = new JPanel(new BorderLayout(0, 18));
+        panel.setBackground(BACKGROUND);
+        panel.setBorder(new EmptyBorder(24, 28, 24, 28));
+        JPanel stats = new JPanel(new GridLayout(1, 4, 14, 0));
+        stats.setOpaque(false);
+        pendingValue = createStatCard("Pending", PENDING);
+        progressValue = createStatCard("In Progress", PROGRESS);
+        resolvedValue = createStatCard("Resolved", RESOLVED);
+        totalValue = createStatCard("Total Reports", MUTED);
+        stats.add(pendingValue.getParent());
+        stats.add(progressValue.getParent());
+        stats.add(resolvedValue.getParent());
+        stats.add(totalValue.getParent());
+        makeOverviewCardClickable(pendingValue.getParent(), "PENDING");
+        makeOverviewCardClickable(progressValue.getParent(), "IN_PROGRESS");
+        makeOverviewCardClickable(resolvedValue.getParent(), "RESOLVED");
+        makeOverviewCardClickable(totalValue.getParent(), null);
+        panel.add(stats, BorderLayout.NORTH);
+
+        JPanel recent = createCard();
+        recent.setLayout(new BorderLayout(0, 12));
+        recent.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER, 1),
+                new EmptyBorder(20, 22, 20, 22)));
+        overviewTitle = new JLabel("Overview");
+        overviewTitle.setFont(new Font("SansSerif", Font.BOLD, 20));
+        overviewTitle.setForeground(TEXT);
+        overviewReportListModel = new DefaultListModel<>();
+        overviewReportList = new JList<>(overviewReportListModel);
+        overviewReportList.setFixedCellHeight(38);
+        overviewReportList.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        overviewReportList.setBorder(new EmptyBorder(8, 10, 8, 10));
+        styleReportList(overviewReportList);
+        overviewReportList.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent event) {
+                if (event.getClickCount() == 2 && overviewReportList.getSelectedIndex() >= 0) {
+                    showReportDetails(getOverviewReports().get(overviewReportList.getSelectedIndex()));
+                }
+            }
+        });
+        summaryLabel = new JLabel();
+        summaryLabel.setForeground(MUTED);
+        recent.add(overviewTitle, BorderLayout.NORTH);
+        JPanel reportArea = new JPanel(new BorderLayout(0, 6));
+        reportArea.setOpaque(false);
+        JLabel hint = new JLabel("Double-click a report to view complete details.");
+        hint.setForeground(MUTED);
+        reportArea.add(hint, BorderLayout.NORTH);
+        reportArea.add(new JScrollPane(overviewReportList), BorderLayout.CENTER);
+        recent.add(reportArea, BorderLayout.CENTER);
+        recent.add(summaryLabel, BorderLayout.SOUTH);
+        panel.add(recent, BorderLayout.CENTER);
+        updateOverviewText();
+        return panel;
+    }
+
+    private void makeOverviewCardClickable(Component component, String status) {
+        if (!(component instanceof JPanel)) return;
+        JPanel card = (JPanel) component;
+        card.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        card.setToolTipText(status == null ? "Show all reports" : "Show " + status.replace('_', ' ').toLowerCase() + " reports");
+        card.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent event) {
+                overviewStatusFilter = status;
+                updateOverviewText();
+            }
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent event) {
+                card.setBorder(BorderFactory.createLineBorder(SECONDARY, 2));
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent event) {
+                card.setBorder(new EmptyBorder(15, 18, 15, 18));
+            }
+        });
+    }
+
+    private JLabel createStatCard(String label, Color color) {
+        JPanel card = createCard();
+        card.setLayout(new BorderLayout());
+        card.setBorder(new EmptyBorder(15, 18, 15, 18));
+        JLabel value = new JLabel("0");
+        value.setName(label);
+        value.setFont(new Font("SansSerif", Font.BOLD, 28));
+        value.setForeground(color);
+        JLabel caption = new JLabel(label);
+        caption.setForeground(MUTED);
+        card.add(value, BorderLayout.NORTH);
+        card.add(caption, BorderLayout.SOUTH);
+        return value;
     }
 
     private JPanel buildResidentPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
+        panel.setBackground(BACKGROUND);
+        panel.setBorder(new EmptyBorder(24, 28, 24, 28));
+        JPanel card = createCard();
+        card.setLayout(new GridBagLayout());
+        card.setBorder(new EmptyBorder(22, 26, 22, 26));
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(8, 8, 8, 8);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
         JLabel title = new JLabel("Submit a Report");
-        title.setFont(new Font("SansSerif", Font.BOLD, 18));
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        panel.add(title, gbc);
+        title.setFont(new Font("SansSerif", Font.BOLD, 20));
+        title.setForeground(TEXT);
+        c.gridx = 0; c.gridy = 0; c.gridwidth = 2;
+        card.add(title, c);
 
-        JLabel typeLabel = new JLabel("Type:");
-        gbc.gridwidth = 1;
-        gbc.gridy = 1;
-        gbc.gridx = 0;
-        panel.add(typeLabel, gbc);
-
-        JComboBox<String> reportTypeBox = new JComboBox<>(new String[]{"Incident", "Complaint"});
-        gbc.gridx = 1;
-        panel.add(reportTypeBox, gbc);
-
-        JLabel categoryLabel = new JLabel("Category:");
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        panel.add(categoryLabel, gbc);
-
-        JTextField categoryField = new JTextField(25);
-        gbc.gridx = 1;
-        panel.add(categoryField, gbc);
-
-        JLabel locationLabel = new JLabel("Location:");
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        panel.add(locationLabel, gbc);
-
-        JTextField locationField = new JTextField(25);
-        gbc.gridx = 1;
-        panel.add(locationField, gbc);
-
-        JLabel detail1Label = new JLabel("Persons Involved / Respondent:");
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        panel.add(detail1Label, gbc);
-
-        JTextField detail1Field = new JTextField(25);
-        gbc.gridx = 1;
-        panel.add(detail1Field, gbc);
-
-        JLabel descriptionLabel = new JLabel("Description:");
-        gbc.gridx = 0;
-        gbc.gridy = 5;
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        panel.add(descriptionLabel, gbc);
-
-        JTextArea descriptionArea = new JTextArea(6, 25);
-        JScrollPane descScroll = new JScrollPane(descriptionArea);
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.BOTH;
-        panel.add(descScroll, gbc);
-
-        JButton submitButton = new JButton("Submit Report");
-        gbc.gridx = 0;
-        gbc.gridy = 6;
-        gbc.gridwidth = 2;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.CENTER;
-        panel.add(submitButton, gbc);
-
-        reportTypeBox.addActionListener(e -> {
-            String selected = (String) reportTypeBox.getSelectedItem();
-            detail1Label.setText("Incident".equals(selected) ? "Persons Involved:" : "Respondent Name:");
+        JComboBox<String> type = new JComboBox<>(new String[]{"Incident", "Complaint"});
+        JComboBox<String> category = new JComboBox<>(new String[]{
+                "Noise Disturbance", "Sanitation", "Infrastructure",
+                "Boundary Dispute", "Public Safety", "Others"
         });
-
-        submitButton.addActionListener(e -> {
-            if (currentUser == null) {
-                return;
-            }
-
-            String type = (String) reportTypeBox.getSelectedItem();
-            String category = categoryField.getText().trim();
-            String location = locationField.getText().trim();
-            String detail = detail1Field.getText().trim();
-            String description = descriptionArea.getText().trim();
-
-            if (category.isEmpty() || location.isEmpty() || detail.isEmpty() || description.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Missing Details", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            String reportId = ("Incident".equals(type) ? "IR-" : "CR-") + (reports.size() + 1001);
-            Report report;
-            if ("Incident".equals(type)) {
-                report = new IncidentReport(reportId, currentUser.getId(), category, location, description, java.time.LocalDate.now().toString(), "PENDING", detail);
-            } else {
-                report = new ComplaintReport(reportId, currentUser.getId(), category, location, description, java.time.LocalDate.now().toString(), "PENDING", detail);
-            }
-
-            reports.add(report);
-            JOptionPane.showMessageDialog(this, "Report submitted successfully!\nID: " + reportId, "Success", JOptionPane.INFORMATION_MESSAGE);
-            updateOverviewText(null);
-            updateReportList();
-
-            categoryField.setText("");
-            locationField.setText("");
-            detail1Field.setText("");
-            descriptionArea.setText("");
-        });
-
+        JTextField location = new JTextField();
+        JTextField detail = new JTextField();
+        JLabel detailLabel = new JLabel("Persons Involved:");
+        JTextArea description = new JTextArea(5, 25);
+        description.setLineWrap(true);
+        description.setWrapStyleWord(true);
+        c.gridwidth = 1;
+        addFormField(card, c, 1, "Report Type:", type);
+        addFormField(card, c, 2, "Category:", category);
+        addFormField(card, c, 3, "Location:", location);
+        c.gridx = 0; c.gridy = 4; card.add(detailLabel, c);
+        c.gridx = 1; card.add(detail, c);
+        c.gridx = 0; c.gridy = 5; c.anchor = GridBagConstraints.NORTHWEST; card.add(new JLabel("Description:"), c);
+        c.gridx = 1; c.fill = GridBagConstraints.BOTH; card.add(new JScrollPane(description), c);
+        JButton submit = createPrimaryButton("Submit Report");
+        c.gridx = 0; c.gridy = 6; c.gridwidth = 2; c.fill = GridBagConstraints.NONE; c.anchor = GridBagConstraints.CENTER;
+        card.add(submit, c);
+        type.addActionListener(e -> detailLabel.setText("Incident".equals(type.getSelectedItem())
+                ? "Persons Involved:" : "Respondent Name:"));
+        submit.addActionListener(e -> submitReport(type, category, location, detail, description));
+        panel.add(card);
         return panel;
     }
 
+    private void submitReport(JComboBox<String> type, JComboBox<String> category, JTextField location,
+                              JTextField detail, JTextArea description) {
+        if (!(currentUser instanceof Resident)) return;
+        String categoryValue = (String) category.getSelectedItem();
+        String locationValue = location.getText().trim();
+        String detailValue = detail.getText().trim();
+        String descriptionValue = description.getText().trim();
+        if (categoryValue.isEmpty() || locationValue.isEmpty() || detailValue.isEmpty() || descriptionValue.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Missing Details", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        String typeValue = (String) type.getSelectedItem();
+        String id = ("Incident".equals(typeValue) ? "IR-" : "CR-") + (reports.size() + 1001);
+        Report report = "Incident".equals(typeValue)
+                ? new IncidentReport(id, currentUser.getId(), categoryValue, locationValue, descriptionValue,
+                LocalDate.now().toString(), "PENDING", detailValue)
+                : new ComplaintReport(id, currentUser.getId(), categoryValue, locationValue, descriptionValue,
+                LocalDate.now().toString(), "PENDING", detailValue);
+        reports.add(report);
+        JOptionPane.showMessageDialog(this, "Report submitted successfully!\nID: " + id,
+                "Success", JOptionPane.INFORMATION_MESSAGE);
+        category.setSelectedIndex(0); location.setText(""); detail.setText(""); description.setText("");
+        updateReportList();
+        updateResidentReportList();
+        updateOverviewText();
+    }
+
     private JPanel buildStaffPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        JPanel topPanel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel(new BorderLayout(0, 14));
+        panel.setBackground(BACKGROUND);
+        panel.setBorder(new EmptyBorder(24, 28, 24, 28));
+        JPanel top = new JPanel(new BorderLayout());
+        top.setOpaque(false);
         JLabel title = new JLabel("Report Queue");
-        title.setFont(new Font("SansSerif", Font.BOLD, 18));
-        topPanel.add(title, BorderLayout.WEST);
-
-        JButton inProgressButton = new JButton("Mark In Progress");
-        JButton resolvedButton = new JButton("Mark Resolved");
-
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        actions.add(inProgressButton);
-        actions.add(resolvedButton);
-        topPanel.add(actions, BorderLayout.EAST);
-
-        panel.add(topPanel, BorderLayout.NORTH);
-
+        title.setFont(new Font("SansSerif", Font.BOLD, 20));
+        title.setForeground(TEXT);
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        actions.setOpaque(false);
+        JButton progress = createSecondaryButton("Mark In Progress");
+        JButton resolved = createPrimaryButton("Mark Resolved");
+        actions.add(progress); actions.add(resolved);
+        top.add(title, BorderLayout.WEST); top.add(actions, BorderLayout.EAST);
         reportListModel = new DefaultListModel<>();
         reportList = new JList<>(reportListModel);
-        reportList.setFont(new Font("Monospaced", Font.PLAIN, 13));
-        panel.add(new JScrollPane(reportList), BorderLayout.CENTER);
-
-        inProgressButton.addActionListener(e -> updateSelectedReportStatus("IN_PROGRESS"));
-        resolvedButton.addActionListener(e -> updateSelectedReportStatus("RESOLVED"));
-
+        reportList.setFixedCellHeight(34);
+        reportList.setBorder(new EmptyBorder(8, 10, 8, 10));
+        reportList.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        styleReportList(reportList);
+        reportList.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent event) {
+                if (event.getClickCount() == 2 && reportList.getSelectedIndex() >= 0) {
+                    showReportDetails(reports.get(reportList.getSelectedIndex()));
+                }
+            }
+        });
+        panel.add(top, BorderLayout.NORTH);
+        JPanel listArea = new JPanel(new BorderLayout(0, 8));
+        listArea.setOpaque(false);
+        JLabel hint = new JLabel("Double-click a report to view its complete details.");
+        hint.setForeground(MUTED);
+        listArea.add(hint, BorderLayout.NORTH);
+        listArea.add(new JScrollPane(reportList), BorderLayout.CENTER);
+        listArea.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER, 1),
+                new EmptyBorder(12, 14, 14, 14)));
+        panel.add(listArea, BorderLayout.CENTER);
+        progress.addActionListener(e -> updateSelectedReportStatus("IN_PROGRESS"));
+        resolved.addActionListener(e -> updateSelectedReportStatus("RESOLVED"));
         updateReportList();
         return panel;
     }
 
+    private JPanel buildMyReportsPanel() {
+        JPanel panel = new JPanel(new BorderLayout(0, 14));
+        panel.setBackground(BACKGROUND);
+        panel.setBorder(new EmptyBorder(24, 28, 24, 28));
+
+        JLabel title = new JLabel("My Submitted Reports");
+        title.setFont(new Font("SansSerif", Font.BOLD, 20));
+        title.setForeground(TEXT);
+
+        residentReportListModel = new DefaultListModel<>();
+        residentReportList = new JList<>(residentReportListModel);
+        residentReportList.setFixedCellHeight(38);
+        residentReportList.setBorder(new EmptyBorder(8, 10, 8, 10));
+        residentReportList.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        styleReportList(residentReportList);
+        residentReportList.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent event) {
+                if (event.getClickCount() == 2 && residentReportList.getSelectedIndex() >= 0) {
+                    ArrayList<Report> residentReports = getVisibleReports();
+                    showReportDetails(residentReports.get(residentReportList.getSelectedIndex()));
+                }
+            }
+        });
+
+        JLabel hint = new JLabel("Double-click a report to view its complete details.");
+        hint.setForeground(MUTED);
+        JPanel top = new JPanel(new BorderLayout());
+        top.setOpaque(false);
+        top.add(title, BorderLayout.WEST);
+        top.add(hint, BorderLayout.EAST);
+        panel.add(top, BorderLayout.NORTH);
+        JPanel listArea = new JPanel(new BorderLayout());
+        listArea.setBackground(Color.WHITE);
+        listArea.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER, 1),
+                new EmptyBorder(8, 10, 10, 10)));
+        listArea.add(new JScrollPane(residentReportList), BorderLayout.CENTER);
+        panel.add(listArea, BorderLayout.CENTER);
+        updateResidentReportList();
+        return panel;
+    }
+
+    private void addFormField(JPanel panel, GridBagConstraints c, int row, String label, JComponent field) {
+        c.gridx = 0; c.gridy = row; c.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(new JLabel(label), c);
+        c.gridx = 1;
+        panel.add(field, c);
+    }
+
+    private void styleReportList(JList<String> list) {
+        list.setSelectionBackground(new Color(219, 234, 254));
+        list.setSelectionForeground(TEXT);
+        list.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> source, Object value, int index,
+                                                           boolean selected, boolean focused) {
+                JLabel cell = (JLabel) super.getListCellRendererComponent(
+                        source, value, index, selected, focused);
+                cell.setBorder(new EmptyBorder(8, 10, 8, 10));
+                if (!selected) {
+                    cell.setBackground(index % 2 == 0 ? Color.WHITE : new Color(248, 250, 252));
+                    cell.setForeground(TEXT);
+                }
+                return cell;
+            }
+        });
+    }
+
+    private JPanel createFormRow(String label, JComponent field) {
+        JPanel row = new JPanel(new BorderLayout(8, 0));
+        row.setOpaque(false);
+        row.setAlignmentX(Component.CENTER_ALIGNMENT);
+        row.setMaximumSize(new Dimension(340, 36));
+        JLabel name = new JLabel(label);
+        name.setPreferredSize(new Dimension(72, 28));
+        name.setForeground(TEXT);
+        row.add(name, BorderLayout.WEST);
+        row.add(field, BorderLayout.CENTER);
+        return row;
+    }
+
     private User authenticate(String username, String password) {
         for (User user : users) {
-            if (user.getUsername().equalsIgnoreCase(username) && user.getPassword().equals(password)) {
-                return user;
-            }
+            if (user.getUsername().equalsIgnoreCase(username) && user.getPassword().equals(password)
+                    && "ACTIVE".equalsIgnoreCase(user.getStatus())) return user;
         }
         return null;
     }
 
     private void updateDashboardForUser() {
-        if (currentUser == null) {
-            return;
-        }
-
-        if (welcomeLabel != null) {
-            welcomeLabel.setText("Welcome, " + currentUser.getFirstName() + " " + currentUser.getLastName());
-        }
-        if (subWelcomeLabel != null) {
-            subWelcomeLabel.setText(currentUser.getRoleType() + " account");
-        }
-
-        JTabbedPane tabbedPane = findTabbedPaneInDashboard();
-        if (tabbedPane == null) {
-            return;
-        }
-
-        if (currentUser instanceof Resident) {
-            tabbedPane.setEnabledAt(1, true);
-            tabbedPane.setEnabledAt(2, false);
-        } else if (currentUser instanceof BarangayStaff) {
-            tabbedPane.setEnabledAt(1, false);
-            tabbedPane.setEnabledAt(2, true);
-        }
-
-        tabbedPane.setSelectedIndex(0);
+        if (currentUser == null) return;
+        dashboardWelcome.setText("Welcome, " + currentUser.getFirstName() + " " + currentUser.getLastName());
+        dashboardRole.setText(currentUser.getRoleType() + " account");
+        boolean resident = currentUser instanceof Resident;
+        overviewStatusFilter = null;
+        overviewTitle.setText(resident ? "My Report Overview" : "Community Overview");
+        residentNavigation.setVisible(resident);
+        myReportsNavigation.setVisible(resident);
+        staffNavigation.setVisible(!resident);
+        activateSidebarButton(findSidebarButton("Overview"));
+        residentNavigation.getParent().revalidate();
+        residentNavigation.getParent().repaint();
+        contentLayout.show(dashboardContent, "overview");
         updateReportList();
-        updateOverviewText(null);
+        updateResidentReportList();
+        updateOverviewText();
     }
 
-    private JTabbedPane findTabbedPaneInDashboard() {
-        Component content = cardPanel.getComponent(1);
-        if (content instanceof Container) {
-            for (Component component : ((Container) content).getComponents()) {
-                if (component instanceof JTabbedPane) {
-                    return (JTabbedPane) component;
-                }
+    private JButton findSidebarButton(String text) {
+        Container sidebar = residentNavigation.getParent();
+        for (Component component : sidebar.getComponents()) {
+            if (component instanceof JButton && text.equals(((JButton) component).getText())) {
+                return (JButton) component;
             }
         }
         return null;
     }
 
     private void updateReportList() {
-        if (reportListModel == null) {
-            return;
-        }
-
+        if (reportListModel == null) return;
         reportListModel.clear();
         for (Report report : reports) {
-            reportListModel.addElement(report.getReportId() + " | " + report.getReportType() + " | " + report.getStatus());
+            reportListModel.addElement(report.getReportId() + "  |  " + report.getReportType()
+                    + "  |  " + report.getCategory() + "  |  " + report.getStatus());
         }
     }
 
-    private void updateSelectedReportStatus(String newStatus) {
-        if (reportList == null) {
-            return;
+    private void updateResidentReportList() {
+        if (residentReportListModel == null) return;
+        residentReportListModel.clear();
+        for (Report report : getVisibleReports()) {
+            residentReportListModel.addElement(report.getReportId() + "  |  " + report.getReportType()
+                    + "  |  " + report.getCategory() + "  |  " + report.getStatus());
         }
+    }
 
-        int index = reportList.getSelectedIndex();
+    private void updateSelectedReportStatus(String status) {
+        int index = reportList == null ? -1 : reportList.getSelectedIndex();
         if (index < 0) {
-            JOptionPane.showMessageDialog(this, "Please select a report to update.", "No Report Selected", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please select a report to update.",
+                    "No Report Selected", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
-        reports.get(index).setStatus(newStatus);
+        Report selectedReport = reports.get(index);
+        String currentStatus = selectedReport.getStatus();
+        if ("RESOLVED".equals(currentStatus) && !"RESOLVED".equals(status)) {
+            JOptionPane.showMessageDialog(this,
+                    "This report is already resolved and cannot be moved back to " + status + ".",
+                    "Status Update Not Allowed", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if ("PENDING".equals(currentStatus) && "RESOLVED".equals(status)) {
+            JOptionPane.showMessageDialog(this,
+                    "A pending report must be marked In Progress before it can be resolved.",
+                    "Status Update Not Allowed", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (currentStatus.equals(status)) {
+            JOptionPane.showMessageDialog(this,
+                    "This report is already marked as " + status + ".",
+                    "No Status Change", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        selectedReport.setStatus(status);
         updateReportList();
-        updateOverviewText(null);
-        JOptionPane.showMessageDialog(this, "Status updated to " + newStatus + ".", "Updated", JOptionPane.INFORMATION_MESSAGE);
+        updateResidentReportList();
+        updateOverviewText();
+        JOptionPane.showMessageDialog(this, "Status updated to " + status + ".",
+                "Updated", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void updateOverviewText(JTextArea overviewArea) {
-        int pending = 0;
-        int progress = 0;
-        int resolved = 0;
-
-        for (Report report : reports) {
-            switch (report.getStatus()) {
-                case "PENDING": pending++; break;
-                case "IN_PROGRESS": progress++; break;
-                case "RESOLVED": resolved++; break;
-                default: break;
+    private void updateOverviewText() {
+        int pending = 0, progress = 0, resolved = 0;
+        ArrayList<Report> visibleReports = getVisibleReports();
+        for (Report report : visibleReports) {
+            if ("PENDING".equals(report.getStatus())) pending++;
+            else if ("IN_PROGRESS".equals(report.getStatus())) progress++;
+            else if ("RESOLVED".equals(report.getStatus())) resolved++;
+        }
+        if (summaryLabel != null) {
+            String label = currentUser instanceof Resident ? "Your reports: " : "Total reports: ";
+            String filterLabel = overviewStatusFilter == null ? "" : "   |   Showing: "
+                    + overviewStatusFilter.replace('_', ' ');
+            summaryLabel.setText(label + visibleReports.size() + "   |   Pending: " + pending
+                    + "   |   In Progress: " + progress + "   |   Resolved: " + resolved + filterLabel);
+        }
+        if (pendingValue != null) pendingValue.setText(String.valueOf(pending));
+        if (progressValue != null) progressValue.setText(String.valueOf(progress));
+        if (resolvedValue != null) resolvedValue.setText(String.valueOf(resolved));
+        if (totalValue != null) totalValue.setText(String.valueOf(visibleReports.size()));
+        if (overviewReportListModel != null) {
+            overviewReportListModel.clear();
+            for (Report report : getOverviewReports()) {
+                overviewReportListModel.addElement(report.getReportId() + "  |  "
+                        + report.getReportType() + "  |  " + report.getCategory()
+                        + "  |  " + report.getStatus());
             }
         }
+    }
 
-        String text = "Barangay reports overview\n" +
-                "=======================\n" +
-                "Pending: " + pending + "\n" +
-                "In Progress: " + progress + "\n" +
-                "Resolved: " + resolved + "\n\n" +
-                "Current user: " + (currentUser != null ? currentUser.getFullName() + " (" + currentUser.getRoleType() + ")" : "Not signed in") + "\n\n" +
-                "Latest reports:\n";
-
-        for (Report report : reports) {
-            text += report.getReportId() + " - " + report.getReportType() + " | " + report.getStatus() + "\n";
+    private ArrayList<Report> getVisibleReports() {
+        ArrayList<Report> visibleReports = new ArrayList<>();
+        if (currentUser instanceof Resident) {
+            for (Report report : reports) {
+                if (currentUser.getId().equals(report.getReporterId())) {
+                    visibleReports.add(report);
+                }
+            }
+        } else {
+            visibleReports.addAll(reports);
         }
+        return visibleReports;
+    }
 
-        if (summaryLabel != null) {
-            summaryLabel.setText("Total records: " + reports.size() + "   |   Pending: " + pending + "   |   In Progress: " + progress + "   |   Resolved: " + resolved);
+    private ArrayList<Report> getOverviewReports() {
+        ArrayList<Report> overviewReports = new ArrayList<>();
+        for (Report report : getVisibleReports()) {
+            if (overviewStatusFilter == null || overviewStatusFilter.equals(report.getStatus())) {
+                overviewReports.add(report);
+            }
         }
+        return overviewReports;
+    }
 
-        if (overviewArea != null) {
-            overviewArea.setText(text);
+    private void showReportDetails(Report report) {
+        if (report == null) return;
+        JDialog dialog = new JDialog(this, "Report Details - " + report.getReportId(), true);
+        dialog.setSize(620, 560);
+        dialog.setLocationRelativeTo(this);
+
+        JPanel content = new JPanel(new BorderLayout(0, 16));
+        content.setBackground(BACKGROUND);
+        content.setBorder(new EmptyBorder(22, 24, 22, 24));
+        JPanel header = new JPanel(new BorderLayout(12, 0));
+        header.setOpaque(false);
+        JLabel title = new JLabel("<html><b>" + report.getReportType() + " Report</b><br>"
+                + "<font size='3'>" + report.getReportId() + "  |  " + report.getCategory() + "</font></html>");
+        title.setFont(new Font("SansSerif", Font.BOLD, 20));
+        title.setForeground(PRIMARY);
+        JLabel status = new JLabel(report.getStatus().replace('_', ' '), SwingConstants.CENTER);
+        status.setOpaque(true);
+        status.setForeground(Color.WHITE);
+        status.setBackground(statusColor(report.getStatus()));
+        status.setBorder(new EmptyBorder(8, 14, 8, 14));
+        header.add(title, BorderLayout.CENTER);
+        header.add(status, BorderLayout.EAST);
+
+        JPanel detailsCard = createCard();
+        detailsCard.setLayout(new BorderLayout(0, 12));
+        detailsCard.setBorder(new EmptyBorder(16, 18, 16, 18));
+        JPanel metadata = new JPanel(new GridLayout(2, 3, 12, 10));
+        metadata.setOpaque(false);
+        metadata.add(detailInfo("Location", report.getLocation()));
+        metadata.add(detailInfo("Date Submitted", report.getDateSubmitted()));
+        metadata.add(detailInfo("Reporter ID", report.getReporterId()));
+        metadata.add(detailInfo("Type", report.getReportType()));
+        metadata.add(detailInfo("Category", report.getCategory()));
+        metadata.add(detailInfo("Status", report.getStatus().replace('_', ' ')));
+
+        JTextArea details = new JTextArea();
+        details.setEditable(false);
+        details.setLineWrap(true);
+        details.setWrapStyleWord(true);
+        details.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        details.setForeground(TEXT);
+        details.setBackground(Color.WHITE);
+        details.setBorder(new EmptyBorder(12, 12, 12, 12));
+        details.setText(report.displayDetails());
+        detailsCard.add(metadata, BorderLayout.NORTH);
+        detailsCard.add(new JScrollPane(details), BorderLayout.CENTER);
+
+        JButton close = createSecondaryButton("Close");
+        close.addActionListener(e -> dialog.dispose());
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        actions.setOpaque(false);
+        actions.add(close);
+        content.add(header, BorderLayout.NORTH);
+        content.add(detailsCard, BorderLayout.CENTER);
+        content.add(actions, BorderLayout.SOUTH);
+        dialog.add(content);
+        dialog.setVisible(true);
+    }
+
+    private JPanel detailInfo(String label, String value) {
+        JPanel panel = new JPanel();
+        panel.setOpaque(false);
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        JLabel labelView = new JLabel(label.toUpperCase());
+        labelView.setFont(new Font("SansSerif", Font.BOLD, 10));
+        labelView.setForeground(MUTED);
+        JLabel valueView = new JLabel("<html>" + value + "</html>");
+        valueView.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        valueView.setForeground(TEXT);
+        panel.add(labelView);
+        panel.add(Box.createVerticalStrut(3));
+        panel.add(valueView);
+        return panel;
+    }
+
+    private Color statusColor(String status) {
+        if ("PENDING".equals(status)) return PENDING;
+        if ("IN_PROGRESS".equals(status)) return PROGRESS;
+        if ("RESOLVED".equals(status)) return RESOLVED;
+        return MUTED;
+    }
+
+    private JPanel createCard() {
+        JPanel panel = new JPanel();
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createLineBorder(BORDER));
+        return panel;
+    }
+
+    private JButton createPrimaryButton(String text) {
+        JButton button = new JButton(text);
+        button.setBackground(PRIMARY);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setFont(new Font("SansSerif", Font.BOLD, 13));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return button;
+    }
+
+    private JButton createSecondaryButton(String text) {
+        JButton button = createPrimaryButton(text);
+        button.setBackground(SECONDARY);
+        return button;
+    }
+
+    private JButton createSidebarButton(String text) {
+        JButton button = new JButton(text);
+        button.setHorizontalAlignment(SwingConstants.CENTER);
+        button.setMaximumSize(new Dimension(175, 44));
+        button.setPreferredSize(new Dimension(175, 44));
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER, 1),
+                new EmptyBorder(9, 12, 9, 12)));
+        button.setFocusPainted(false);
+        button.setContentAreaFilled(true);
+        button.setOpaque(true);
+        button.setBackground(Color.WHITE);
+        button.setForeground(TEXT);
+        button.setFont(new Font("SansSerif", Font.BOLD, 13));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent event) {
+                if (button != activeSidebarButton) {
+                    button.setBackground(new Color(239, 246, 255));
+                    button.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(SECONDARY, 1),
+                            new EmptyBorder(9, 12, 9, 12)));
+                }
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent event) {
+                if (button != activeSidebarButton) {
+                    button.setBackground(Color.WHITE);
+                    button.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(BORDER, 1),
+                            new EmptyBorder(9, 12, 9, 12)));
+                }
+            }
+        });
+        return button;
+    }
+
+    private void activateSidebarButton(JButton selected) {
+        if (activeSidebarButton != null) {
+            activeSidebarButton.setBackground(Color.WHITE);
+            activeSidebarButton.setForeground(TEXT);
+            activeSidebarButton.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(BORDER, 1),
+                    new EmptyBorder(9, 12, 9, 12)));
         }
+        activeSidebarButton = selected;
+        selected.setBackground(PRIMARY);
+        selected.setForeground(Color.WHITE);
+        selected.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(PRIMARY, 1),
+                new EmptyBorder(9, 12, 9, 12)));
+    }
+
+    private JLabel centeredLabel(String text, int size, Color color, int style) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("SansSerif", style, size));
+        label.setForeground(color);
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return label;
+    }
+
+    private ImageIcon createLogoIcon() {
+        return createLogoIcon(64, 22);
+    }
+
+    private ImageIcon createLogoIconSmall() {
+        return createLogoIcon(40, 15);
+    }
+
+    private ImageIcon createLogoIcon(int size, int fontSize) {
+        BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = image.createGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        graphics.setColor(SECONDARY);
+        graphics.fillRoundRect(2, 2, size - 4, size - 4, size / 4, size / 4);
+        graphics.setColor(Color.WHITE);
+        graphics.setFont(new Font("SansSerif", Font.BOLD, fontSize));
+        FontMetrics metrics = graphics.getFontMetrics();
+        String mark = "B";
+        graphics.drawString(mark, (size - metrics.stringWidth(mark)) / 2,
+                (size - metrics.getHeight()) / 2 + metrics.getAscent());
+        graphics.dispose();
+        return new ImageIcon(image);
     }
 
     public static void main(String[] args) {
