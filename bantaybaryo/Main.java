@@ -1,11 +1,11 @@
 package bantaybaryo;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 public class Main extends JFrame {
     private static final Color PRIMARY = Color.decode("#1E3A8A");
@@ -73,84 +73,181 @@ public class Main extends JFrame {
                 "2026-10-07", "IN_PROGRESS", "Barangay Waste Team"));
     }
 
-    private JPanel buildHomePanel() {
-        JPanel root = new JPanel(new BorderLayout());
-        root.setBackground(BACKGROUND);
+        private JPanel buildHomePanel() {
+    JPanel root = new JPanel(new BorderLayout());
+    root.setBackground(BACKGROUND);
 
-        JPanel nav = new JPanel(new BorderLayout());
-        nav.setBackground(PRIMARY);
-        nav.setBorder(new EmptyBorder(14, 32, 14, 32));
-        JLabel brand = new JLabel("Bantay-Baryo");
+    // ---------- NAVBAR ----------
+    JPanel nav = new JPanel(new BorderLayout());
+    nav.setBackground(PRIMARY);
+    nav.setBorder(new EmptyBorder(12, 32, 12, 32));
+
+    // Left: logo + brand
+    JPanel brandPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+    brandPanel.setOpaque(false);
+
+    ImageIcon navLogo = getLogoIcon(36, 36);
+    JLabel brandLogo = new JLabel();
+    if (navLogo != null) {
+        brandLogo.setIcon(navLogo);
+    } else {
+        brandLogo.setText("🛡");
+        brandLogo.setFont(new Font("SansSerif", Font.PLAIN, 24));
+        brandLogo.setForeground(Color.WHITE);
+    }
+
+    JLabel brand = new JLabel("Bantay-Baryo");
         brand.setForeground(Color.WHITE);
-        brand.setFont(new Font("SansSerif", Font.BOLD, 24));
-        JButton loginButton = createPrimaryButton("Login");
-        loginButton.setPreferredSize(new Dimension(125, 42));
-        loginButton.setBorderPainted(true);
-        loginButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.WHITE, 2),
-                new EmptyBorder(8, 19, 8, 19)));
-        loginButton.setToolTipText("Open the Bantay-Baryo login screen");
-        loginButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent event) {
-                loginButton.setBackground(SECONDARY);
-                loginButton.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(Color.WHITE, 2),
-                        new EmptyBorder(8, 19, 8, 19)));
-            }
+        brand.setFont(new Font("SansSerif", Font.BOLD, 22));
 
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent event) {
-                loginButton.setBackground(PRIMARY);
-                loginButton.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(Color.WHITE, 2),
-                        new EmptyBorder(8, 19, 8, 19)));
-            }
+        brandPanel.add(brandLogo);
+        brandPanel.add(brand);
 
-            @Override
-            public void mousePressed(java.awt.event.MouseEvent event) {
-                loginButton.setBackground(new Color(15, 55, 105));
-            }
+    // Right: Home + Login
+    JPanel navActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+            navActions.setOpaque(false);
 
-            @Override
-            public void mouseReleased(java.awt.event.MouseEvent event) {
-                if (loginButton.contains(event.getPoint())) {
-                    loginButton.setBackground(SECONDARY);
-                }
+    JButton homeButton = createNavGhostButton("Home");
+            homeButton.addActionListener(e -> mainLayout.show(mainPanel, "home"));
+
+    JButton loginButton = createNavOutlineButton("Login");
+            loginButton.addActionListener(e -> mainLayout.show(mainPanel, "login"));
+
+        navActions.add(homeButton);
+        navActions.add(loginButton);
+
+        nav.add(brandPanel, BorderLayout.WEST);
+        nav.add(navActions, BorderLayout.EAST);
+
+    // ---------- HERO CONTENT ----------
+    JPanel hero = new JPanel();
+        hero.setBackground(BACKGROUND);
+        hero.setLayout(new GridBagLayout());   // true vertical centering
+
+    JPanel heroContent = new JPanel();
+        heroContent.setOpaque(false);
+        heroContent.setLayout(new BoxLayout(heroContent, BoxLayout.Y_AXIS));
+
+    // Big centered logo
+    ImageIcon heroLogo = getLogoIcon(220, 220);
+        if (heroLogo != null) {
+            JLabel heroLogoLabel = new JLabel(heroLogo);
+                heroLogoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                heroContent.add(heroLogoLabel);
+                heroContent.add(Box.createVerticalStrut(20));
+        }
+
+    // Title
+    JLabel title = new JLabel("Your Community. Your Voice. Your Safety.");
+        title.setFont(new Font("SansSerif", Font.BOLD, 32));
+        title.setForeground(PRIMARY);
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    // Subtitle
+    JLabel subtitle = new JLabel("A simple digital platform for reporting and tracking barangay concerns.");
+        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        subtitle.setForeground(MUTED);
+        subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    // Call to action
+    JButton getStarted = createPrimaryButton("Get Started");
+        getStarted.setFont(new Font("SansSerif", Font.BOLD, 14));
+        getStarted.setPreferredSize(new Dimension(200, 46));
+        getStarted.setMaximumSize(new Dimension(200, 46));
+        getStarted.setAlignmentX(Component.CENTER_ALIGNMENT);
+        getStarted.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(PRIMARY, 1),
+                new EmptyBorder(10, 24, 10, 24)));
+        getStarted.addActionListener(e -> mainLayout.show(mainPanel, "login"));
+        getStarted.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
+                getStarted.setBackground(SECONDARY);
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                getStarted.setBackground(PRIMARY);
             }
         });
-        loginButton.addActionListener(e -> mainLayout.show(mainPanel, "login"));
-        nav.add(brand, BorderLayout.WEST);
-        nav.add(loginButton, BorderLayout.EAST);
 
-        JPanel content = new JPanel();
-        content.setOpaque(false);
-        content.setBorder(new EmptyBorder(58, 55, 45, 55));
-        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+    // Footer note
+    JLabel note = new JLabel("Accounts are created and managed by the Barangay Administrator.");
+        note.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        note.setForeground(MUTED);
+        note.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel title = centeredLabel("Your Community. Your Voice. Your Safety.", 32, PRIMARY, Font.BOLD);
-        JLabel subtitle = centeredLabel("A simple digital platform for reporting and tracking barangay concerns.",
-                16, MUTED, Font.PLAIN);
-        JPanel cards = new JPanel(new GridLayout(1, 3, 18, 0));
-        cards.setOpaque(false);
-        cards.setMaximumSize(new Dimension(950, 170));
-        cards.add(createInfoCard("01", "Submit Reports", "Residents can file incidents and complaints with location and details."));
-        cards.add(createInfoCard("02", "Track Progress", "Follow a report from Pending to In Progress and finally Resolved."));
-        cards.add(createInfoCard("03", "Community Response", "Barangay staff can review and update community reports."));
+        heroContent.add(title);
+        heroContent.add(Box.createVerticalStrut(14));
+        heroContent.add(subtitle);
+        heroContent.add(Box.createVerticalStrut(32));
+        heroContent.add(getStarted);
+        heroContent.add(Box.createVerticalStrut(26));
+        heroContent.add(note);
 
-        JLabel note = centeredLabel("Accounts are created and managed by the Barangay Administrator.",
-                13, MUTED, Font.PLAIN);
-        content.add(title);
-        content.add(Box.createVerticalStrut(12));
-        content.add(subtitle);
-        content.add(Box.createVerticalStrut(38));
-        content.add(cards);
-        content.add(Box.createVerticalStrut(30));
-        content.add(note);
+    GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        gbc.anchor = GridBagConstraints.CENTER;
+        hero.add(heroContent, gbc);
 
         root.add(nav, BorderLayout.NORTH);
-        root.add(new JScrollPane(content), BorderLayout.CENTER);
+        root.add(hero, BorderLayout.CENTER);
         return root;
+}
+
+    // Transparent text-only button for the navbar (Home)
+    private JButton createNavGhostButton(String text) {
+        JButton button = new JButton(text);
+        button.setForeground(Color.WHITE);
+        button.setBackground(PRIMARY);
+        button.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setOpaque(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setBorder(new EmptyBorder(10, 16, 10, 16));
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
+                button.setForeground(new Color(191, 219, 254));   // soft light blue
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                button.setForeground(Color.WHITE);
+            }
+        });
+        return button;
+    }
+
+    // Outlined button for the navbar (Login)
+    private JButton createNavOutlineButton(String text) {
+        JButton button = new JButton(text);
+        button.setForeground(Color.WHITE);
+        button.setBackground(PRIMARY);
+        button.setFont(new Font("SansSerif", Font.BOLD, 14));
+        button.setFocusPainted(false);
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
+        button.setBorderPainted(true);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setPreferredSize(new Dimension(110, 40));
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.WHITE, 2),
+                new EmptyBorder(6, 18, 6, 18)));
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
+                button.setBackground(SECONDARY);
+                button.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(Color.WHITE, 2),
+                        new EmptyBorder(6, 18, 6, 18)));
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                button.setBackground(PRIMARY);
+                button.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(Color.WHITE, 2),
+                        new EmptyBorder(6, 18, 6, 18)));
+            }
+        });
+        return button;
     }
 
     private JPanel createInfoCard(String number, String heading, String description) {
@@ -183,7 +280,13 @@ public class Main extends JFrame {
                 new EmptyBorder(30, 38, 30, 38)));
         card.setPreferredSize(new Dimension(420, 450));
 
-        JLabel logo = new JLabel(createLogoIcon());
+        ImageIcon loginLogo = getLogoIcon(90, 90);
+        JLabel logo;
+            if (loginLogo != null) {
+                logo = new JLabel(loginLogo);
+            } else {
+                logo = new JLabel(createLogoIcon());   // fallback to "B" badge
+            }
         logo.setAlignmentX(Component.CENTER_ALIGNMENT);
         JLabel title = centeredLabel("Bantay-Baryo", 24, PRIMARY, Font.BOLD);
         JLabel subtitle = centeredLabel("Login to your barangay account", 13, MUTED, Font.PLAIN);
@@ -972,6 +1075,63 @@ public class Main extends JFrame {
         label.setForeground(color);
         label.setAlignmentX(Component.CENTER_ALIGNMENT);
         return label;
+    }
+
+    private Image logoImage;
+
+private Image getLogoImage() {
+    if (logoImage != null) return logoImage;
+    String[] candidates = {
+        "resources/logo.png",
+        "bantaybaryo/resources/logo.png",
+        "src/resources/logo.png",
+        "src/main/resources/logo.png"
+    };
+    for (String path : candidates) {
+        java.io.File f = new java.io.File(path);
+        if (f.exists()) {
+            logoImage = new ImageIcon(f.getAbsolutePath()).getImage();
+            System.out.println("✅ Logo loaded from: " + f.getAbsolutePath());
+            return logoImage;
+        }
+    }
+    java.net.URL url = getClass().getResource("/resources/logo.png");
+    if (url != null) {
+        logoImage = new ImageIcon(url).getImage();
+        System.out.println("✅ Logo loaded from classpath");
+        return logoImage;
+    }
+    System.err.println("⚠️ Logo not found. Using placeholder.");
+    return null;
+}
+
+    private ImageIcon getLogoIcon(int maxWidth, int maxHeight) {
+        Image img = getLogoImage();
+        if (img == null) return null;
+
+        int srcW = img.getWidth(null);
+        int srcH = img.getHeight(null);
+        if (srcW <= 0 || srcH <= 0) return null;
+
+        // Preserve aspect ratio — fit inside the maxWidth x maxHeight box
+        double scale = Math.min((double) maxWidth / srcW, (double) maxHeight / srcH);
+        int drawW = (int) Math.round(srcW * scale);
+        int drawH = (int) Math.round(srcH * scale);
+
+        BufferedImage scaled = new BufferedImage(drawW, drawH, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = scaled.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                            RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING,
+                            RenderingHints.VALUE_RENDER_QUALITY);
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                            RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION,
+                            RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+        g2.drawImage(img, 0, 0, drawW, drawH, null);
+        g2.dispose();
+
+        return new ImageIcon(scaled);
     }
 
     private ImageIcon createLogoIcon() {
