@@ -96,7 +96,7 @@ public class Main extends JFrame {
         brandLogo.setForeground(Color.WHITE);
     }
 
-    JLabel brand = new JLabel("Bantay-Baryo");
+    JLabel brand = new JLabel("Bantay Baryo");
         brand.setForeground(Color.WHITE);
         brand.setFont(new Font("SansSerif", Font.BOLD, 22));
 
@@ -288,7 +288,7 @@ public class Main extends JFrame {
                 logo = new JLabel(createLogoIcon());   // fallback to "B" badge
             }
         logo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        JLabel title = centeredLabel("Bantay-Baryo", 24, PRIMARY, Font.BOLD);
+        JLabel title = centeredLabel("Bantay Baryo", 24, PRIMARY, Font.BOLD);
         JLabel subtitle = centeredLabel("Login to your barangay account", 13, MUTED, Font.PLAIN);
         JTextField username = new JTextField("mcruz");
         JPasswordField password = new JPasswordField("pass123");
@@ -306,7 +306,7 @@ public class Main extends JFrame {
         signIn.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(PRIMARY, 1),
                 new EmptyBorder(10, 24, 10, 24)));
-        signIn.setToolTipText("Sign in to your Bantay-Baryo account");
+        signIn.setToolTipText("Sign in to your Bantay Baryo account");
         signIn.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent event) {
