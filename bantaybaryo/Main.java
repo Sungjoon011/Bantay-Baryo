@@ -77,35 +77,35 @@ public class Main extends JFrame {
     JPanel root = new JPanel(new BorderLayout());
     root.setBackground(BACKGROUND);
 
-    // ---------- NAVBAR ----------
-    JPanel nav = new JPanel(new BorderLayout());
-    nav.setBackground(PRIMARY);
-    nav.setBorder(new EmptyBorder(12, 32, 12, 32));
+        // ---------- NAVBAR ----------
+        JPanel nav = new JPanel(new BorderLayout());
+        nav.setBackground(PRIMARY);
+        nav.setBorder(new EmptyBorder(12, 32, 12, 32));
 
-    // Left: logo + brand
-    JPanel brandPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
-    brandPanel.setOpaque(false);
+        // Left: Logo + Brand Text
+        JPanel brandPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        brandPanel.setOpaque(false);
 
-    ImageIcon navLogo = getLogoIcon(36, 36);
-    JLabel brandLogo = new JLabel();
-    if (navLogo != null) {
-        brandLogo.setIcon(navLogo);
-    } else {
-        brandLogo.setText("🛡");
-        brandLogo.setFont(new Font("SansSerif", Font.PLAIN, 24));
-        brandLogo.setForeground(Color.WHITE);
-    }
+        ImageIcon navLogo = getLogoIcon(40, 40); // Circular logo at 40px
+        JLabel brandLogo = new JLabel();
+        if (navLogo != null) {
+            brandLogo.setIcon(navLogo);
+        } else {
+            brandLogo.setText("🛡");
+            brandLogo.setFont(new Font("SansSerif", Font.PLAIN, 24));
+            brandLogo.setForeground(Color.WHITE);
+        }
 
-    JLabel brand = new JLabel("Bantay Baryo");
+        JLabel brand = new JLabel("Bantay Baryo");
         brand.setForeground(Color.WHITE);
         brand.setFont(new Font("SansSerif", Font.BOLD, 22));
 
         brandPanel.add(brandLogo);
         brandPanel.add(brand);
 
-    // Right: Home + Login
-    JPanel navActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-            navActions.setOpaque(false);
+        // Right: Home + Login
+        JPanel navActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        navActions.setOpaque(false);
 
     JButton homeButton = createNavGhostButton("Home");
             homeButton.addActionListener(e -> mainLayout.show(mainPanel, "home"));
@@ -252,79 +252,144 @@ public class Main extends JFrame {
         return card;
     }
 
-    private JPanel buildLoginPanel() {
-        JPanel root = new JPanel(new GridBagLayout());
+            private JPanel buildLoginPanel() {
+        JPanel root = new JPanel(new BorderLayout());
         root.setBackground(BACKGROUND);
+
+        // ---------- NAVBAR (Same as Landing Page) ----------
+        JPanel nav = new JPanel(new BorderLayout());
+        nav.setBackground(PRIMARY);
+        nav.setBorder(new EmptyBorder(12, 32, 12, 32));
+
+        JPanel brandPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        brandPanel.setOpaque(false);
+
+        ImageIcon navLogo = getLogoIcon(40, 40);
+        JLabel brandLogo = new JLabel();
+        if (navLogo != null) {
+            brandLogo.setIcon(navLogo);
+        } else {
+            brandLogo.setText("🛡");
+            brandLogo.setFont(new Font("SansSerif", Font.PLAIN, 24));
+            brandLogo.setForeground(Color.WHITE);
+        }
+
+        JLabel brand = new JLabel("Bantay Baryo");
+        brand.setForeground(Color.WHITE);
+        brand.setFont(new Font("SansSerif", Font.BOLD, 22));
+
+        brandPanel.add(brandLogo);
+        brandPanel.add(brand);
+
+        JPanel navActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        navActions.setOpaque(false);
+
+        JButton homeButton = createNavGhostButton("Home");
+        homeButton.addActionListener(e -> mainLayout.show(mainPanel, "home"));
+
+        // Make the Login button look "active" (solid background)
+        JButton loginButton = new JButton("Login");
+        loginButton.setForeground(PRIMARY);
+        loginButton.setBackground(Color.WHITE);
+        loginButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        loginButton.setFocusPainted(false);
+        loginButton.setOpaque(true);
+        loginButton.setContentAreaFilled(true);
+        loginButton.setBorderPainted(false);
+        loginButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        loginButton.setPreferredSize(new Dimension(110, 40));
+        // No action needed since we are already on the login page
+
+        navActions.add(homeButton);
+        navActions.add(loginButton);
+
+        nav.add(brandPanel, BorderLayout.WEST);
+        nav.add(navActions, BorderLayout.EAST);
+
+        // ---------- LOGIN FORM ----------
+        JPanel centerWrapper = new JPanel(new GridBagLayout());
+        centerWrapper.setBackground(BACKGROUND);
+
         JPanel card = createCard();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER),
-                new EmptyBorder(30, 38, 30, 38)));
-        card.setPreferredSize(new Dimension(420, 450));
+                new EmptyBorder(35, 40, 35, 40)));
+        card.setPreferredSize(new Dimension(420, 440));
 
-        ImageIcon loginLogo = getLogoIcon(90, 90);
-        JLabel logo;
-            if (loginLogo != null) {
-                logo = new JLabel(loginLogo);
-            } else {
-                logo = new JLabel(createLogoIcon());   // fallback to "B" badge
-            }
-        logo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        JLabel title = centeredLabel("Bantay Baryo", 24, PRIMARY, Font.BOLD);
-        JLabel subtitle = centeredLabel("Login to your barangay account", 13, MUTED, Font.PLAIN);
-        JTextField username = new JTextField("mcruz");
-        JPasswordField password = new JPasswordField("pass123");
-        username.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
-        password.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
+        // Title inside the card
+        JLabel title = centeredLabel("Welcome Back!", 26, PRIMARY, Font.BOLD);
+        JLabel subtitle = centeredLabel("Log in to your account", 14, MUTED, Font.PLAIN);
+
+        // Username Field (Label on top)
+        JPanel userGroup = new JPanel();
+        userGroup.setLayout(new BoxLayout(userGroup, BoxLayout.Y_AXIS));
+        userGroup.setOpaque(false);
+        userGroup.setAlignmentX(Component.CENTER_ALIGNMENT);
+        userGroup.setMaximumSize(new Dimension(320, 60));
+
+        JLabel userLabel = new JLabel("Username");
+        userLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        userLabel.setForeground(TEXT);
+        userLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Removed the "mcruz" text here
+        JTextField username = new JTextField(); 
+        username.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        username.setMaximumSize(new Dimension(320, 38));
+        username.setPreferredSize(new Dimension(320, 38));
+        username.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        userGroup.add(userLabel);
+        userGroup.add(Box.createVerticalStrut(6));
+        userGroup.add(username);
+
+        // Password Field (Label on top)
+        JPanel passGroup = new JPanel();
+        passGroup.setLayout(new BoxLayout(passGroup, BoxLayout.Y_AXIS));
+        passGroup.setOpaque(false);
+        passGroup.setAlignmentX(Component.CENTER_ALIGNMENT);
+        passGroup.setMaximumSize(new Dimension(320, 60));
+
+        JLabel passLabel = new JLabel("Password");
+        passLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        passLabel.setForeground(TEXT);
+        passLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Removed the "pass123" text here
+        JPasswordField password = new JPasswordField(); 
+        password.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        password.setMaximumSize(new Dimension(320, 38));
+        password.setPreferredSize(new Dimension(320, 38));
+        password.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        passGroup.add(passLabel);
+        passGroup.add(Box.createVerticalStrut(6));
+        passGroup.add(password);
+
+        // Show Password Checkbox (Aligned to the Left)
         JCheckBox showPassword = new JCheckBox("Show Password");
         showPassword.setOpaque(false);
         showPassword.setAlignmentX(Component.CENTER_ALIGNMENT);
+        showPassword.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        // This wrapper ensures the checkbox aligns with the input fields
+        JPanel checkBoxWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        checkBoxWrapper.setOpaque(false);
+        checkBoxWrapper.setMaximumSize(new Dimension(320, 30));
+        checkBoxWrapper.add(showPassword);
+        
         showPassword.addActionListener(e -> password.setEchoChar(showPassword.isSelected() ? (char) 0 : '•'));
 
-        JButton signIn = createPrimaryButton("Sign In");
-        signIn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        signIn.setPreferredSize(new Dimension(260, 44));
-        signIn.setMaximumSize(new Dimension(260, 44));
-        signIn.setBorder(BorderFactory.createCompoundBorder(
+        // Log In Button
+        JButton logIn = createPrimaryButton("Log in");
+        logIn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        logIn.setPreferredSize(new Dimension(320, 44));
+        logIn.setMaximumSize(new Dimension(320, 44));
+        logIn.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(PRIMARY, 1),
                 new EmptyBorder(10, 24, 10, 24)));
-        signIn.setToolTipText("Sign in to your Bantay Baryo account");
-        signIn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent event) {
-                signIn.setBackground(SECONDARY);
-                signIn.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(PRIMARY, 2),
-                        new EmptyBorder(9, 23, 9, 23)));
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent event) {
-                signIn.setBackground(PRIMARY);
-                signIn.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(PRIMARY, 1),
-                        new EmptyBorder(10, 24, 10, 24)));
-            }
-
-            @Override
-            public void mousePressed(java.awt.event.MouseEvent event) {
-                signIn.setBackground(new Color(15, 55, 105));
-            }
-
-            @Override
-            public void mouseReleased(java.awt.event.MouseEvent event) {
-                if (signIn.contains(event.getPoint())) {
-                    signIn.setBackground(SECONDARY);
-                }
-            }
-        });
-        JButton back = new JButton("← Back to Home");
-        back.setBorderPainted(false);
-        back.setContentAreaFilled(false);
-        back.setForeground(SECONDARY);
-        back.setAlignmentX(Component.CENTER_ALIGNMENT);
-        back.addActionListener(e -> mainLayout.show(mainPanel, "home"));
-        signIn.addActionListener(e -> {
+        
+        logIn.addActionListener(e -> {
             User user = authenticate(username.getText().trim(), new String(password.getPassword()));
             if (user == null) {
                 JOptionPane.showMessageDialog(this, "Invalid username or password.", "Login Failed",
@@ -339,30 +404,25 @@ public class Main extends JFrame {
             password.setText("");
         });
 
-        card.add(logo);
-        card.add(Box.createVerticalStrut(8));
+        // Assemble the Card
         card.add(title);
-        card.add(Box.createVerticalStrut(5));
-        card.add(subtitle);
-        card.add(Box.createVerticalStrut(24));
-        card.add(createFormRow("Username", username));
-        card.add(Box.createVerticalStrut(12));
-        card.add(createFormRow("Password", password));
-        JLabel demoAccounts = new JLabel("<html><div style='text-align:center'>Demo accounts:<br>"
-                + "Resident: mcruz / pass123<br>Staff: jsantos / admin123</div></html>");
-        demoAccounts.setFont(new Font("SansSerif", Font.ITALIC, 11));
-        demoAccounts.setForeground(MUTED);
-        demoAccounts.setHorizontalAlignment(SwingConstants.CENTER);
-        demoAccounts.setAlignmentX(Component.CENTER_ALIGNMENT);
         card.add(Box.createVerticalStrut(6));
-        card.add(demoAccounts);
-        card.add(Box.createVerticalStrut(8));
-        card.add(showPassword);
-        card.add(Box.createVerticalStrut(20));
-        card.add(signIn);
+        card.add(subtitle);
+        card.add(Box.createVerticalStrut(30));
+        
+        card.add(userGroup);
+        card.add(Box.createVerticalStrut(16));
+        card.add(passGroup);
         card.add(Box.createVerticalStrut(10));
-        card.add(back);
-        root.add(card);
+        card.add(checkBoxWrapper); // Added the aligned wrapper here
+        card.add(Box.createVerticalStrut(24));
+        card.add(logIn);
+
+        centerWrapper.add(card);
+
+        // Add to Root
+        root.add(nav, BorderLayout.NORTH);
+        root.add(centerWrapper, BorderLayout.CENTER);
         return root;
     }
 
@@ -1087,7 +1147,7 @@ private Image getLogoImage() {
     return null;
 }
 
-    private ImageIcon getLogoIcon(int maxWidth, int maxHeight) {
+        private ImageIcon getLogoIcon(int maxWidth, int maxHeight) {
         Image img = getLogoImage();
         if (img == null) return null;
 
@@ -1095,21 +1155,70 @@ private Image getLogoImage() {
         int srcH = img.getHeight(null);
         if (srcW <= 0 || srcH <= 0) return null;
 
-        // Preserve aspect ratio — fit inside the maxWidth x maxHeight box
+        // 1. Calculate the best dimensions preserving aspect ratio
         double scale = Math.min((double) maxWidth / srcW, (double) maxHeight / srcH);
         int drawW = (int) Math.round(srcW * scale);
         int drawH = (int) Math.round(srcH * scale);
 
+        // 2. Step-Down Scaling (The secret to crisp logos)
+        // If the image is much larger than the target, shrink it by half repeatedly.
+        while (srcW > drawW * 2 && srcH > drawH * 2) {
+            srcW /= 2;
+            srcH /= 2;
+            BufferedImage stepDown = new BufferedImage(srcW, srcH, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2step = stepDown.createGraphics();
+            g2step.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2step.drawImage(img, 0, 0, srcW, srcH, null);
+            g2step.dispose();
+            img = stepDown; // Use this new smaller image for the next loop
+        }
+
+        // 3. Final high-quality bicubic scaling to exact target size
         BufferedImage scaled = new BufferedImage(drawW, drawH, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = scaled.createGraphics();
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                            RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-        g2.setRenderingHint(RenderingHints.KEY_RENDERING,
-                            RenderingHints.VALUE_RENDER_QUALITY);
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                            RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION,
-                            RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+        g2.drawImage(img, 0, 0, drawW, drawH, null);
+        g2.dispose();
+
+        return new ImageIcon(scaled);
+    }
+
+        private ImageIcon getNavLogoIcon(int maxHeight) {
+        String[] candidates = {
+            "bantaybaryo/resources/logo_nav.png",
+            "resources/logo_nav.png",
+            "src/resources/logo_nav.png",
+            "src/main/resources/logo_nav.png"
+        };
+        
+        Image img = null;
+        for (String path : candidates) {
+            java.io.File f = new java.io.File(path);
+            if (f.exists()) {
+                img = new ImageIcon(f.getAbsolutePath()).getImage();
+                break;
+            }
+        }
+        
+        if (img == null) return getLogoIcon(45, 45); // Fallback to the round logo
+        
+        int srcW = img.getWidth(null);
+        int srcH = img.getHeight(null);
+        if (srcW <= 0 || srcH <= 0) return null;
+
+        // Calculate width based on the height to preserve aspect ratio (it's a wide logo)
+        double scale = (double) maxHeight / srcH;
+        int drawW = (int) Math.round(srcW * scale);
+        int drawH = maxHeight;
+
+        BufferedImage scaled = new BufferedImage(drawW, drawH, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = scaled.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.drawImage(img, 0, 0, drawW, drawH, null);
         g2.dispose();
 
