@@ -149,24 +149,7 @@ public class Main extends JFrame {
         subtitle.setForeground(MUTED);
         subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-    // Call to action
-    JButton getStarted = createPrimaryButton("Get Started");
-        getStarted.setFont(new Font("SansSerif", Font.BOLD, 14));
-        getStarted.setPreferredSize(new Dimension(200, 46));
-        getStarted.setMaximumSize(new Dimension(200, 46));
-        getStarted.setAlignmentX(Component.CENTER_ALIGNMENT);
-        getStarted.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(PRIMARY, 1),
-                new EmptyBorder(10, 24, 10, 24)));
-        getStarted.addActionListener(e -> mainLayout.show(mainPanel, "login"));
-        getStarted.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
-                getStarted.setBackground(SECONDARY);
-            }
-            @Override public void mouseExited(java.awt.event.MouseEvent e) {
-                getStarted.setBackground(PRIMARY);
-            }
-        });
+    
 
     // Footer note
     JLabel note = new JLabel("Accounts are created and managed by the Barangay Administrator.");
@@ -177,9 +160,8 @@ public class Main extends JFrame {
         heroContent.add(title);
         heroContent.add(Box.createVerticalStrut(14));
         heroContent.add(subtitle);
-        heroContent.add(Box.createVerticalStrut(32));
-        heroContent.add(getStarted);
-        heroContent.add(Box.createVerticalStrut(26));
+        heroContent.add(Box.createVerticalStrut(40));
+        heroContent.add(Box.createVerticalStrut(100));
         heroContent.add(note);
 
     GridBagConstraints gbc = new GridBagConstraints();
