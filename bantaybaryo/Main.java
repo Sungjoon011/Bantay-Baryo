@@ -1,10 +1,10 @@
 package bantaybaryo;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 public class Main extends JFrame {
     // Made public so the separated panels can use your exact color theme!
@@ -51,7 +51,12 @@ public class Main extends JFrame {
 
     private void seedData() {
         users.add(new Resident("R-1001", "Maria", "Dela", "Cruz", "user", "user123", "Purok 2", "Bahay ng Lahat"));
-        users.add(new BarangayStaff("S-2001", "Jose", "", "Santos", "admin", "admin123", "Community Officer"));
+        
+        // NORMAL STAFF account
+        users.add(new BarangayStaff("S-2001", "Jose", "", "Santos", "staff", "staff123", "Community Officer"));
+        
+        // This is your ADMIN account
+        users.add(new Admin("A-9001", "Super", "", "Admin", "admin", "admin123", "Barangay Captain"));
 
         reports.add(new IncidentReport("IR-3001", "R-1001", "Public Safety", "Barangay Hall",
                 "A noise disturbance and fight occurred near the covered court.",
@@ -245,6 +250,10 @@ public class Main extends JFrame {
                 (size - metrics.getHeight()) / 2 + metrics.getAscent());
         graphics.dispose();
         return new ImageIcon(image);
+    }
+
+        public ArrayList<User> getUsers() {
+        return users;
     }
 
     public static void main(String[] args) {

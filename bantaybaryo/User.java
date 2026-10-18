@@ -9,6 +9,7 @@ public abstract class User {
     private String username;
     private String password;
     private String status;
+    private String contactNumber;
 
     // Constructor
     protected User(String id, String firstName, String middleName, String lastName, String username, String password) {
@@ -19,6 +20,7 @@ public abstract class User {
         this.username = username;
         this.password = password;
         this.status = "ACTIVE"; // Default status upon creation
+        this.contactNumber = ""; 
     }
 
     // Abstraction: Subclasses MUST implement this method
@@ -50,4 +52,7 @@ public abstract class User {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getContactNumber() { return contactNumber; }
+    public void setContactNumber(String contactNumber) { this.contactNumber = contactNumber; }
 }
