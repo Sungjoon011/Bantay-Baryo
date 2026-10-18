@@ -1,9 +1,14 @@
 package bantaybaryo;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
@@ -40,11 +45,20 @@ public class Main extends JFrame {
     private JList<String> overviewReportList;
     private JLabel summaryLabel;
     private JLabel overviewTitle;
+    private JButton profileNavigation;
     private JButton residentNavigation;
     private JButton myReportsNavigation;
     private JButton staffNavigation;
     private JButton activeSidebarButton;
     private String overviewStatusFilter;
+    private JTextField profileFirstName;
+    private JTextField profileMiddleName;
+    private JTextField profileLastName;
+    private JTextField profileUsername;
+    private JTextField profileId;
+    private JTextField profilePurok;
+    private JTextField profileSitio;
+    private JLabel profileRole;
 
     public Main() {
         setTitle("Bantay Baryo - Community Incident Management System");
@@ -181,7 +195,7 @@ public class Main extends JFrame {
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER),
                 new EmptyBorder(30, 38, 30, 38)));
-        card.setPreferredSize(new Dimension(420, 450));
+        card.setPreferredSize(new Dimension(420, 560));
 
         JLabel logo = new JLabel(createLogoIcon());
         logo.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -325,12 +339,18 @@ public class Main extends JFrame {
         dashboardContent.setBackground(BACKGROUND);
 
         JButton overview = createSidebarButton("Overview");
+        profileNavigation = createSidebarButton("Profile");
         residentNavigation = createSidebarButton("Submit a Report");
         myReportsNavigation = createSidebarButton("My Reports");
         staffNavigation = createSidebarButton("Report Queue");
         overview.addActionListener(e -> {
             activateSidebarButton(overview);
             contentLayout.show(dashboardContent, "overview");
+        });
+        profileNavigation.addActionListener(e -> {
+            activateSidebarButton(profileNavigation);
+            loadProfileData();
+            contentLayout.show(dashboardContent, "profile");
         });
         residentNavigation.addActionListener(e -> {
             activateSidebarButton(residentNavigation);
@@ -348,6 +368,8 @@ public class Main extends JFrame {
         sidebar.add(Box.createVerticalStrut(2));
         sidebar.add(overview);
         sidebar.add(Box.createVerticalStrut(10));
+        sidebar.add(profileNavigation);
+        sidebar.add(Box.createVerticalStrut(10));
         sidebar.add(residentNavigation);
         sidebar.add(Box.createVerticalStrut(10));
         sidebar.add(myReportsNavigation);
@@ -356,6 +378,7 @@ public class Main extends JFrame {
         activateSidebarButton(overview);
 
         dashboardContent.add(buildOverviewPanel(), "overview");
+        dashboardContent.add(buildProfilePanel(), "profile");
         dashboardContent.add(buildResidentPanel(), "resident");
         dashboardContent.add(buildMyReportsPanel(), "myReports");
         dashboardContent.add(buildStaffPanel(), "staff");
@@ -422,6 +445,205 @@ public class Main extends JFrame {
         panel.add(recent, BorderLayout.CENTER);
         updateOverviewText();
         return panel;
+    }
+
+    private JPanel buildProfilePanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(BACKGROUND);
+
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(BACKGROUND);
+        content.setBorder(new EmptyBorder(24, 28, 28, 28));
+
+        JPanel heading = new JPanel();
+        heading.setLayout(new BoxLayout(heading, BoxLayout.Y_AXIS));
+        heading.setOpaque(false);
+        heading.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel title = new JLabel("Your Profile");
+        title.setFont(new Font("SansSerif", Font.BOLD, 24));
+        title.setForeground(TEXT);
+        JLabel subtitle = new JLabel("Keep your account and community information up to date.");
+        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        subtitle.setForeground(MUTED);
+        heading.add(title);
+        heading.add(Box.createVerticalStrut(4));
+        heading.add(subtitle);
+        content.add(heading);
+        content.add(Box.createVerticalStrut(18));
+
+        JPanel personalCard = createCard();
+        personalCard.setLayout(new GridLayout(4, 2, 12, 10));
+        personalCard.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Personal Information"),
+                new EmptyBorder(10, 12, 12, 12)));
+
+        profileFirstName = new JTextField();
+        profileMiddleName = new JTextField();
+        profileLastName = new JTextField();
+        JButton savePersonal = createPrimaryButton("Save Personal Info");
+        personalCard.add(new JLabel("First Name:"));
+        personalCard.add(profileFirstName);
+        personalCard.add(new JLabel("Middle Name:"));
+        personalCard.add(profileMiddleName);
+        personalCard.add(new JLabel("Last Name:"));
+        personalCard.add(profileLastName);
+        personalCard.add(new JLabel(""));
+        personalCard.add(savePersonal);
+        personalCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+        personalCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 190));
+        savePersonal.addActionListener(e -> saveProfilePersonalInfo());
+
+        JPanel accountCard = createCard();
+        accountCard.setLayout(new GridLayout(3, 2, 12, 10));
+        accountCard.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Account Information"),
+                new EmptyBorder(10, 12, 12, 12)));
+        profileUsername = new JTextField();
+        profileUsername.setEditable(false);
+        profileId = new JTextField();
+        profileId.setEditable(false);
+        profileRole = new JLabel();
+        accountCard.add(new JLabel("Username:"));
+        accountCard.add(profileUsername);
+        accountCard.add(new JLabel("User ID:"));
+        accountCard.add(profileId);
+        accountCard.add(new JLabel("Role:"));
+        accountCard.add(profileRole);
+        accountCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+        accountCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 155));
+
+        JPanel detailsCard = createCard();
+        detailsCard.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Resident / Barangay Information"),
+                new EmptyBorder(10, 12, 12, 12)));
+        detailsCard.setLayout(new GridLayout(4, 2, 12, 10));
+        profilePurok = new JTextField();
+        profileSitio = new JTextField();
+        detailsCard.add(new JLabel("Purok / Position:"));
+        detailsCard.add(profilePurok);
+        detailsCard.add(new JLabel("Sitio / Assignment:"));
+        detailsCard.add(profileSitio);
+        detailsCard.add(new JLabel(""));
+        JButton saveDetails = createPrimaryButton("Save Resident Details");
+        detailsCard.add(saveDetails);
+        detailsCard.add(new JLabel(""));
+        detailsCard.add(new JLabel("Staff position and assignment are managed by the administrator."));
+        detailsCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detailsCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 190));
+        saveDetails.addActionListener(e -> saveProfileDetails());
+
+        JPanel securityCard = createCard();
+        securityCard.setLayout(new GridLayout(4, 2, 12, 10));
+        securityCard.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Security Settings"),
+                new EmptyBorder(10, 12, 12, 12)));
+        JPasswordField currentPassword = new JPasswordField();
+        JPasswordField newPassword = new JPasswordField();
+        JPasswordField confirmPassword = new JPasswordField();
+        JButton updatePassword = createPrimaryButton("Update Password");
+        securityCard.add(new JLabel("Current Password:"));
+        securityCard.add(currentPassword);
+        securityCard.add(new JLabel("New Password:"));
+        securityCard.add(newPassword);
+        securityCard.add(new JLabel("Confirm New Password:"));
+        securityCard.add(confirmPassword);
+        securityCard.add(new JLabel(""));
+        securityCard.add(updatePassword);
+        securityCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+        securityCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 190));
+        updatePassword.addActionListener(e -> updateProfilePassword(
+                currentPassword, newPassword, confirmPassword));
+
+        content.add(personalCard);
+        content.add(Box.createVerticalStrut(14));
+        content.add(accountCard);
+        content.add(Box.createVerticalStrut(14));
+        content.add(detailsCard);
+        content.add(Box.createVerticalStrut(14));
+        content.add(securityCard);
+
+        JScrollPane scrollPane = new JScrollPane(content);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setBackground(BACKGROUND);
+        scrollPane.getViewport().setBackground(BACKGROUND);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private void loadProfileData() {
+        if (currentUser == null || profileFirstName == null) return;
+        profileFirstName.setText(currentUser.getFirstName());
+        profileMiddleName.setText(currentUser.getMiddleName());
+        profileLastName.setText(currentUser.getLastName());
+        profileUsername.setText(currentUser.getUsername());
+        profileId.setText(currentUser.getId());
+        profileRole.setText(currentUser.getRoleType());
+
+        if (currentUser instanceof Resident) {
+            Resident resident = (Resident) currentUser;
+            profilePurok.setText(resident.getPurok());
+            profileSitio.setText(resident.getSitio());
+            profilePurok.setEditable(true);
+            profileSitio.setEditable(true);
+        } else if (currentUser instanceof BarangayStaff) {
+            BarangayStaff staff = (BarangayStaff) currentUser;
+            profilePurok.setText(staff.getStaffPosition());
+            profileSitio.setText("Barangay Operations");
+            profilePurok.setEditable(false);
+            profileSitio.setEditable(false);
+        }
+    }
+
+    private void saveProfileDetails() {
+        if (!(currentUser instanceof Resident)) {
+            JOptionPane.showMessageDialog(this, "Staff assignment details are managed by the administrator.",
+                    "Information", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        Resident resident = (Resident) currentUser;
+        resident.setPurok(profilePurok.getText().trim());
+        resident.setSitio(profileSitio.getText().trim());
+        JOptionPane.showMessageDialog(this, "Resident details updated.");
+    }
+
+    private void saveProfilePersonalInfo() {
+        if (currentUser == null) return;
+        if (profileFirstName.getText().trim().isEmpty() || profileLastName.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "First name and last name are required.",
+                    "Missing Details", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        currentUser.setFirstName(profileFirstName.getText().trim());
+        currentUser.setMiddleName(profileMiddleName.getText().trim());
+        currentUser.setLastName(profileLastName.getText().trim());
+        dashboardWelcome.setText("Welcome, " + currentUser.getFirstName() + " " + currentUser.getLastName());
+        JOptionPane.showMessageDialog(this, "Personal information updated.");
+    }
+
+    private void updateProfilePassword(JPasswordField currentPassword, JPasswordField newPassword,
+                                       JPasswordField confirmPassword) {
+        if (currentUser == null) return;
+        String oldValue = new String(currentPassword.getPassword());
+        String newValue = new String(newPassword.getPassword());
+        String confirmValue = new String(confirmPassword.getPassword());
+        if (!oldValue.equals(currentUser.getPassword())) {
+            JOptionPane.showMessageDialog(this, "Incorrect current password.",
+                    "Password Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (newValue.isEmpty() || !newValue.equals(confirmValue)) {
+            JOptionPane.showMessageDialog(this, "New passwords do not match or are empty.",
+                    "Password Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        currentUser.setPassword(newValue);
+        currentPassword.setText("");
+        newPassword.setText("");
+        confirmPassword.setText("");
+        JOptionPane.showMessageDialog(this, "Password updated successfully.");
     }
 
     private void makeOverviewCardClickable(Component component, String status) {
@@ -681,6 +903,7 @@ public class Main extends JFrame {
         myReportsNavigation.setVisible(resident);
         staffNavigation.setVisible(!resident);
         activateSidebarButton(findSidebarButton("Overview"));
+        loadProfileData();
         residentNavigation.getParent().revalidate();
         residentNavigation.getParent().repaint();
         contentLayout.show(dashboardContent, "overview");
@@ -975,27 +1198,83 @@ public class Main extends JFrame {
     }
 
     private ImageIcon createLogoIcon() {
-        return createLogoIcon(64, 22);
+        return createLogoIcon(112);
     }
 
     private ImageIcon createLogoIconSmall() {
-        return createLogoIcon(40, 15);
+        return createLogoIcon(64);
     }
 
-    private ImageIcon createLogoIcon(int size, int fontSize) {
-        BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D graphics = image.createGraphics();
-        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        graphics.setColor(SECONDARY);
-        graphics.fillRoundRect(2, 2, size - 4, size - 4, size / 4, size / 4);
-        graphics.setColor(Color.WHITE);
-        graphics.setFont(new Font("SansSerif", Font.BOLD, fontSize));
-        FontMetrics metrics = graphics.getFontMetrics();
-        String mark = "B";
-        graphics.drawString(mark, (size - metrics.stringWidth(mark)) / 2,
-                (size - metrics.getHeight()) / 2 + metrics.getAscent());
+    private ImageIcon createLogoIcon(int size) {
+        BufferedImage source;
+        try (InputStream logoStream = Main.class.getResourceAsStream("/bantaybaryo/bantay-baryo-logo.png")) {
+            if (logoStream == null) {
+                throw new IllegalStateException("Logo resource not found: /bantaybaryo/bantay-baryo-logo.png");
+            }
+            source = ImageIO.read(logoStream);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Unable to load the Bantay-Baryo logo.", exception);
+        }
+        if (source == null) {
+            throw new IllegalStateException("Logo resource is not a readable image.");
+        }
+
+        int minX = source.getWidth();
+        int minY = source.getHeight();
+        int maxX = -1;
+        int maxY = -1;
+        for (int y = 0; y < source.getHeight(); y++) {
+            for (int x = 0; x < source.getWidth(); x++) {
+                if ((source.getRGB(x, y) >>> 24) != 0) {
+                    minX = Math.min(minX, x);
+                    minY = Math.min(minY, y);
+                    maxX = Math.max(maxX, x);
+                    maxY = Math.max(maxY, y);
+                }
+            }
+        }
+
+        if (maxX < minX || maxY < minY) {
+            throw new IllegalStateException("Logo resource contains no visible pixels.");
+        }
+
+        BufferedImage cropped = source.getSubimage(minX, minY, maxX - minX + 1, maxY - minY + 1);
+        BufferedImage scaledLogo = cropped;
+        while (Math.max(scaledLogo.getWidth(), scaledLogo.getHeight()) / 2 >= size) {
+            int nextWidth = Math.max(1, scaledLogo.getWidth() / 2);
+            int nextHeight = Math.max(1, scaledLogo.getHeight() / 2);
+            scaledLogo = scaleLogo(scaledLogo, nextWidth, nextHeight);
+        }
+        int targetHeight = Math.max(1, (int) Math.round(
+                (double) scaledLogo.getHeight() * size / scaledLogo.getWidth()));
+        if (targetHeight > size) {
+            targetHeight = size;
+            size = Math.max(1, (int) Math.round(
+                    (double) scaledLogo.getWidth() * targetHeight / scaledLogo.getHeight()));
+        }
+        scaledLogo = scaleLogo(scaledLogo, size, targetHeight);
+        return new ImageIcon(sharpenLogo(scaledLogo));
+    }
+
+    private BufferedImage scaleLogo(BufferedImage source, int width, int height) {
+        BufferedImage scaled = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = scaled.createGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        graphics.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+        graphics.drawImage(source, 0, 0, width, height, null);
         graphics.dispose();
-        return new ImageIcon(image);
+        return scaled;
+    }
+
+    private BufferedImage sharpenLogo(BufferedImage source) {
+        Kernel sharpenKernel = new Kernel(3, 3, new float[]{
+                0.0f, -0.15f, 0.0f,
+                -0.15f, 1.6f, -0.15f,
+                0.0f, -0.15f, 0.0f
+        });
+        ConvolveOp sharpen = new ConvolveOp(sharpenKernel, ConvolveOp.EDGE_NO_OP, null);
+        return sharpen.filter(source, null);
     }
 
     public static void main(String[] args) {
