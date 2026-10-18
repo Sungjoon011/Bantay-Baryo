@@ -232,27 +232,8 @@ public class Main extends JFrame {
         return button;
     }
 
-    private JPanel createInfoCard(String number, String heading, String description) {
-        JPanel card = createCard();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBorder(new EmptyBorder(20, 20, 20, 20));
-        JLabel numberLabel = new JLabel(number);
-        numberLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
-        numberLabel.setForeground(SECONDARY);
-        JLabel headingLabel = new JLabel(heading);
-        headingLabel.setFont(new Font("SansSerif", Font.BOLD, 17));
-        headingLabel.setForeground(TEXT);
-        JLabel descriptionLabel = new JLabel("<html><div style='width:220px'>" + description + "</div></html>");
-        descriptionLabel.setForeground(MUTED);
-        card.add(numberLabel);
-        card.add(Box.createVerticalStrut(8));
-        card.add(headingLabel);
-        card.add(Box.createVerticalStrut(8));
-        card.add(descriptionLabel);
-        return card;
-    }
 
-            private JPanel buildLoginPanel() {
+        private JPanel buildLoginPanel() {
         JPanel root = new JPanel(new BorderLayout());
         root.setBackground(BACKGROUND);
 
@@ -793,19 +774,7 @@ public class Main extends JFrame {
             }
         });
     }
-
-    private JPanel createFormRow(String label, JComponent field) {
-        JPanel row = new JPanel(new BorderLayout(8, 0));
-        row.setOpaque(false);
-        row.setAlignmentX(Component.CENTER_ALIGNMENT);
-        row.setMaximumSize(new Dimension(340, 36));
-        JLabel name = new JLabel(label);
-        name.setPreferredSize(new Dimension(72, 28));
-        name.setForeground(TEXT);
-        row.add(name, BorderLayout.WEST);
-        row.add(field, BorderLayout.CENTER);
-        return row;
-    }
+    
 
     private User authenticate(String username, String password) {
         for (User user : users) {
@@ -1186,44 +1155,6 @@ private Image getLogoImage() {
         return new ImageIcon(scaled);
     }
 
-        private ImageIcon getNavLogoIcon(int maxHeight) {
-        String[] candidates = {
-            "bantaybaryo/resources/logo_nav.png",
-            "resources/logo_nav.png",
-            "src/resources/logo_nav.png",
-            "src/main/resources/logo_nav.png"
-        };
-        
-        Image img = null;
-        for (String path : candidates) {
-            java.io.File f = new java.io.File(path);
-            if (f.exists()) {
-                img = new ImageIcon(f.getAbsolutePath()).getImage();
-                break;
-            }
-        }
-        
-        if (img == null) return getLogoIcon(45, 45); // Fallback to the round logo
-        
-        int srcW = img.getWidth(null);
-        int srcH = img.getHeight(null);
-        if (srcW <= 0 || srcH <= 0) return null;
-
-        // Calculate width based on the height to preserve aspect ratio (it's a wide logo)
-        double scale = (double) maxHeight / srcH;
-        int drawW = (int) Math.round(srcW * scale);
-        int drawH = maxHeight;
-
-        BufferedImage scaled = new BufferedImage(drawW, drawH, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = scaled.createGraphics();
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.drawImage(img, 0, 0, drawW, drawH, null);
-        g2.dispose();
-
-        return new ImageIcon(scaled);
-    }
 
     private ImageIcon createLogoIcon() {
         return createLogoIcon(64, 22);
