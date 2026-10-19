@@ -2,8 +2,10 @@ package bantaybaryo;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.ArrayList;
 
 public class Main extends JFrame {
@@ -58,21 +60,30 @@ public class Main extends JFrame {
 
     private void seedData() {
         // 1. Resident Account (Username: user | Password: user123)
-        users.add(new Resident("R-1001", "Resident", "Test", "User", "user", "user123", "Purok 2", "Household 1"));
+        users.add(new Resident("R-1001", "Maria", "Dela", "Cruz", "user", "user123", "Purok 2", "Bahay ng Lahat"));
 
-        // 2. Staff Account (Username: staff | Password: staff123)
-        users.add(new BarangayStaff("S-2001", "Barangay", "", "Staff", "staff", "staff123", "Community Officer"));
+        // 2. Staff Account (Username: admin | Password: admin123)
+        users.add(new BarangayStaff("S-2001", "Jose", "", "Santos", "admin", "admin123", "Community Officer"));
 
-        // 3. Admin Account (Username: admin | Password: admin123)
-        users.add(new Admin("A-3001", "System", "", "Admin", "admin", "admin123", "Head Administrator"));
+        // 3. Admin Account (Username: superadmin | Password: admin123)
+        users.add(new Admin("A-3001", "System", "", "Admin", "superadmin", "admin123", "Head Administrator"));
 
+        // Incident Report WITHOUT photo
         reports.add(new IncidentReport("IR-3001", "R-1001", "Public Safety", "Barangay Hall",
                 "A noise disturbance and fight occurred near the covered court.",
-                "2026-10-07", "PENDING", "Resident Test User and Juan Dela Torre"));
+                "2026-10-07", "PENDING", "Maria Cruz and Juan Dela Torre"));
+
+        // Incident Report WITH photo
+        reports.add(new IncidentReport("IR-3002", "R-1001", "Vandalism", "Basketball Court",
+                "Graffiti drawn on the court wall.",
+                "2026-10-08", "PENDING", "Unknown", "uploads/vandalism_photo.jpg", "IMAGE"));
+
+        // Complaint Report
         reports.add(new ComplaintReport("CR-3002", "R-1001", "Garbage Disposal", "Purok 5",
                 "Uncollected trash has been piling up near the drainage canal.",
                 "2026-10-07", "IN_PROGRESS", "Barangay Waste Team"));
     }
+
     public User authenticate(String username, String password) {
         for (User user : users) {
             if (user.getUsername().equalsIgnoreCase(username) && user.getPassword().equals(password)
@@ -90,7 +101,6 @@ public class Main extends JFrame {
     public User getCurrentUser() { return currentUser; }
     public void setCurrentUser(User user) { this.currentUser = user; }
     public ArrayList<Report> getReports() { return reports; }
-
     public ArrayList<User> getUsers() { return users; }
 
     public JPanel createCard() {
@@ -176,6 +186,27 @@ public class Main extends JFrame {
         label.setForeground(color);
         label.setAlignmentX(Component.CENTER_ALIGNMENT);
         return label;
+    }
+
+    /**
+     * File chooser helper for attaching photos or videos to reports.
+     */
+    public File chooseMediaFile(Component parent) {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Select Photo or Video Proof");
+        chooser.setAcceptAllFileFilterUsed(false);
+
+        FileNameExtensionFilter mediaFilter = new FileNameExtensionFilter(
+                "Media Files (*.jpg, *.png, *.mp4, *.avi, *.mov)",
+                "jpg", "jpeg", "png", "gif", "mp4", "avi", "mov", "mkv"
+        );
+        chooser.addChoosableFileFilter(mediaFilter);
+
+        int result = chooser.showOpenDialog(parent);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            return chooser.getSelectedFile();
+        }
+        return null;
     }
 
     private Image logoImage;

@@ -3,6 +3,8 @@ package bantaybaryo;
 import java.io.Serializable;
 
 public abstract class User implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String id;
     private String firstName;
     private String middleName;
@@ -12,7 +14,8 @@ public abstract class User implements Serializable {
     private String contactNumber;
     private String status;
 
-    public User(String id, String firstName, String middleName, String lastName, String username, String password) {
+    public User(String id, String firstName, String middleName, String lastName,
+                String username, String password) {
         this.id = id;
         this.firstName = firstName;
         this.middleName = middleName;
@@ -33,6 +36,7 @@ public abstract class User implements Serializable {
     }
 
     public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
