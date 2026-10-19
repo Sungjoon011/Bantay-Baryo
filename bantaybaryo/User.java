@@ -1,39 +1,38 @@
 package bantaybaryo;
 
-public abstract class User {
-    // Encapsulation: Variables are strictly private
+import java.io.Serializable;
+
+public abstract class User implements Serializable {
     private String id;
     private String firstName;
     private String middleName;
     private String lastName;
     private String username;
     private String password;
-    private String status;
     private String contactNumber;
+    private String status;
 
-    // Constructor
-    protected User(String id, String firstName, String middleName, String lastName, String username, String password) {
+    public User(String id, String firstName, String middleName, String lastName, String username, String password) {
         this.id = id;
         this.firstName = firstName;
         this.middleName = middleName;
         this.lastName = lastName;
         this.username = username;
         this.password = password;
-        this.status = "ACTIVE"; // Default status upon creation
-        this.contactNumber = ""; 
+        this.contactNumber = "";
+        this.status = "ACTIVE";
     }
 
-    // Abstraction: Subclasses MUST implement this method
     public abstract String getRoleType();
 
-    // Utility Method
     public String getFullName() {
-        return firstName + " " + (middleName.isEmpty() ? "" : middleName + " ") + lastName;
+        if (middleName == null || middleName.trim().isEmpty()) {
+            return firstName + " " + lastName;
+        }
+        return firstName + " " + middleName + " " + lastName;
     }
 
-    // --- GETTERS AND SETTERS ---
     public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
 
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
@@ -50,9 +49,9 @@ public abstract class User {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
     public String getContactNumber() { return contactNumber; }
     public void setContactNumber(String contactNumber) { this.contactNumber = contactNumber; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }

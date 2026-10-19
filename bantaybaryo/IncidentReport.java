@@ -1,16 +1,13 @@
 package bantaybaryo;
 
 public class IncidentReport extends Report {
-    // Specific attribute only for incidents
     private String personsInvolved;
 
     public IncidentReport(String reportId, String reporterId, String category, String location, String description, String dateSubmitted, String status, String personsInvolved) {
-        // Pass the shared data up to the parent Report class
         super(reportId, reporterId, category, location, description, dateSubmitted, status);
         this.personsInvolved = personsInvolved;
     }
 
-    // Fulfilling the abstract methods (Polymorphism)
     @Override
     public String getReportType() {
         return "Incident";
@@ -25,7 +22,6 @@ public class IncidentReport extends Report {
                 "Description: " + getDescription();
     }
 
-    // Getter and Setter
     public String getPersonsInvolved() { return personsInvolved; }
     public void setPersonsInvolved(String personsInvolved) { this.personsInvolved = personsInvolved; }
 }

@@ -1,13 +1,12 @@
 package bantaybaryo;
 
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 
 public class Main extends JFrame {
-    // Made public so the separated panels can use your exact color theme!
     public static final Color PRIMARY = Color.decode("#1E3A8A");
     public static final Color SECONDARY = Color.decode("#0284C7");
     public static final Color BACKGROUND = Color.decode("#F8FAFC");
@@ -21,9 +20,8 @@ public class Main extends JFrame {
     private final CardLayout mainLayout = new CardLayout();
     private final JPanel mainPanel = new JPanel(mainLayout);
 
-    // Shared Data
-    private final ArrayList<User> users = new ArrayList<>();
-    private final ArrayList<Report> reports = new ArrayList<>();
+    private ArrayList<User> users;
+    private ArrayList<Report> reports;
 
     private User currentUser;
     private DashboardPanel dashboardPanel;
@@ -35,12 +33,21 @@ public class Main extends JFrame {
         setMinimumSize(new Dimension(1000, 680));
         setLocationRelativeTo(null);
 
-        seedData();
+        // Load existing data from files
+        users = FileHandler.loadUsers();
+        reports = FileHandler.loadReports();
 
-        // 1. Initialize the Dashboard first so we can reference it
+        // If files are empty (first time running), seed default accounts and save them
+        if (users.isEmpty()) {
+            users = new ArrayList<>();
+            reports = new ArrayList<>();
+            seedData();
+            FileHandler.saveUsers(users);
+            FileHandler.saveReports(reports);
+        }
+
         dashboardPanel = new DashboardPanel(mainLayout, mainPanel, this);
 
-        // 2. Add all your newly separated panels!
         mainPanel.add(new HomePanel(mainLayout, mainPanel, this), "home");
         mainPanel.add(new LoginPanel(mainLayout, mainPanel, this), "login");
         mainPanel.add(dashboardPanel, "dashboard");
@@ -50,23 +57,22 @@ public class Main extends JFrame {
     }
 
     private void seedData() {
-        users.add(new Resident("R-1001", "Maria", "Dela", "Cruz", "user", "user123", "Purok 2", "Bahay ng Lahat"));
-        
-        // NORMAL STAFF account
-        users.add(new BarangayStaff("S-2001", "Jose", "", "Santos", "staff", "staff123", "Community Officer"));
-        
-        // This is your ADMIN account
-        users.add(new Admin("A-9001", "Super", "", "Admin", "admin", "admin123", "Barangay Captain"));
+        // 1. Resident Account (Username: user | Password: user123)
+        users.add(new Resident("R-1001", "Resident", "Test", "User", "user", "user123", "Purok 2", "Household 1"));
+
+        // 2. Staff Account (Username: staff | Password: staff123)
+        users.add(new BarangayStaff("S-2001", "Barangay", "", "Staff", "staff", "staff123", "Community Officer"));
+
+        // 3. Admin Account (Username: admin | Password: admin123)
+        users.add(new Admin("A-3001", "System", "", "Admin", "admin", "admin123", "Head Administrator"));
 
         reports.add(new IncidentReport("IR-3001", "R-1001", "Public Safety", "Barangay Hall",
                 "A noise disturbance and fight occurred near the covered court.",
-                "2026-10-07", "PENDING", "Maria Cruz and Juan Dela Torre"));
+                "2026-10-07", "PENDING", "Resident Test User and Juan Dela Torre"));
         reports.add(new ComplaintReport("CR-3002", "R-1001", "Garbage Disposal", "Purok 5",
                 "Uncollected trash has been piling up near the drainage canal.",
                 "2026-10-07", "IN_PROGRESS", "Barangay Waste Team"));
     }
-
-    // --- Core Data & Logic Methods ---
     public User authenticate(String username, String password) {
         for (User user : users) {
             if (user.getUsername().equalsIgnoreCase(username) && user.getPassword().equals(password)
@@ -75,7 +81,6 @@ public class Main extends JFrame {
         return null;
     }
 
-    // Bridges the LoginPanel to the DashboardPanel securely
     public void updateDashboardForUser() {
         if (dashboardPanel != null) {
             dashboardPanel.updateDashboardForUser();
@@ -86,7 +91,8 @@ public class Main extends JFrame {
     public void setCurrentUser(User user) { this.currentUser = user; }
     public ArrayList<Report> getReports() { return reports; }
 
-    // --- Shared UI Components (Made Public) ---
+    public ArrayList<User> getUsers() { return users; }
+
     public JPanel createCard() {
         JPanel panel = new JPanel();
         panel.setBackground(Color.WHITE);
@@ -250,10 +256,6 @@ public class Main extends JFrame {
                 (size - metrics.getHeight()) / 2 + metrics.getAscent());
         graphics.dispose();
         return new ImageIcon(image);
-    }
-
-        public ArrayList<User> getUsers() {
-        return users;
     }
 
     public static void main(String[] args) {
