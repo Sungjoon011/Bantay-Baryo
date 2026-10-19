@@ -34,6 +34,9 @@ public class DashboardPanel extends JPanel {
     private JButton staffNavigation;
     private JButton profileNavigation;
     private JButton adminNavigation;
+    private JButton notificationsNavigation;
+    private JComboBox<String> residentStatusFilter;
+    private JComboBox<String> staffStatusFilter;
 
     private JButton activeSidebarButton;
     private String overviewStatusFilter;
@@ -116,6 +119,8 @@ public class DashboardPanel extends JPanel {
         staffNavigation = createSidebarButton("Report Queue");
         profileNavigation = createSidebarButton("My Profile");
         adminNavigation = createSidebarButton("Manage Users");
+        notificationsNavigation = createSidebarButton("Notifications");
+
 
         // --- Sidebar Button Actions ---
         overviewNavigation.addActionListener(e -> {
@@ -131,10 +136,14 @@ public class DashboardPanel extends JPanel {
             updateResidentReportList();
             contentLayout.show(dashboardContent, "myReports");
         });
+
         staffNavigation.addActionListener(e -> {
             activateSidebarButton(staffNavigation);
+            // 👇 Rebuild the Staff Panel every time it's clicked to get fresh data!
+            dashboardContent.add(buildStaffPanel(), "staff");
             contentLayout.show(dashboardContent, "staff");
         });
+
         profileNavigation.addActionListener(e -> {
             activateSidebarButton(profileNavigation);
             dashboardContent.add(buildProfilePanel(), "profile");
@@ -145,9 +154,18 @@ public class DashboardPanel extends JPanel {
             contentLayout.show(dashboardContent, "admin");
         });
 
+        notificationsNavigation.addActionListener(e -> {
+            activateSidebarButton(notificationsNavigation);
+            // We rebuild the panel every time so it shows the latest notifications
+            dashboardContent.add(buildNotificationPanel(), "notifications");
+            contentLayout.show(dashboardContent, "notifications");
+        });        
+
         // --- Add Buttons to Sidebar ---
         sidebar.add(Box.createVerticalStrut(2));
         sidebar.add(profileNavigation);
+        sidebar.add(Box.createVerticalStrut(10));
+        sidebar.add(notificationsNavigation);
         sidebar.add(Box.createVerticalStrut(10));
         sidebar.add(overviewNavigation);
         sidebar.add(Box.createVerticalStrut(10));
@@ -229,6 +247,7 @@ public class DashboardPanel extends JPanel {
         staffNavigation.setVisible(isStaff || isAdmin);
         adminNavigation.setVisible(isAdmin);
         profileNavigation.setVisible(true);
+        notificationsNavigation.setVisible(true);
 
         // 3. Reset the view based on the role
         overviewStatusFilter = null;
@@ -888,7 +907,14 @@ public class DashboardPanel extends JPanel {
                     String reportId = (String) table.getValueAt(table.getSelectedRow(), 0);
                     for (Report report : mainApp.getReports()) {
                         if (report.getReportId().equals(reportId)) {
-                            showReportDetails(report);
+                            
+                            // 👇 1. SWITCH TO THE REPORT QUEUE TAB FIRST 👇
+                            dashboardContent.add(buildStaffPanel(), "staff"); // Rebuild to ensure it's fresh
+                            activateSidebarButton(staffNavigation);
+                            contentLayout.show(dashboardContent, "staff");
+                            
+                            // 👇 2. THEN OPEN THE MODAL 👇
+                            SwingUtilities.invokeLater(() -> showReportDetails(report));
                             break;
                         }
                     }
@@ -1004,11 +1030,13 @@ public class DashboardPanel extends JPanel {
         card.add(Box.createVerticalStrut(15));
 
         // --- CATEGORY ---
+        
         card.add(createFieldLabel("Category"));
         JComboBox<String> categoryBox = new JComboBox<>(new String[]{
-                "Noise Disturbance", "Sanitation", "Infrastructure",
+                "Select a Category...", "Noise Disturbance", "Sanitation", "Infrastructure",
                 "Boundary Dispute", "Public Safety", "Others"
         });
+
         categoryBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
         categoryBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         categoryBox.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -1024,32 +1052,103 @@ public class DashboardPanel extends JPanel {
         dynamicPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         dynamicPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
 
+        // 👇 Date Field with Focus Listener 👇
         JTextField dateField = createModernTextField("mm/dd/yyyy --:-- --");
+        dateField.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (dateField.getText().equals("mm/dd/yyyy --:-- --")) {
+                    dateField.setText("");
+                    dateField.setForeground(Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (dateField.getText().isEmpty()) {
+                    dateField.setForeground(Color.GRAY);
+                    dateField.setText("mm/dd/yyyy --:-- --");
+                }
+            }
+        });
+
+        // 👇 Respondent Field with Focus Listener 👇
         JTextField respondentField = createModernTextField("e.g., neighbor or store name");
+        respondentField.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (respondentField.getText().equals("e.g., neighbor or store name")) {
+                    respondentField.setText("");
+                    respondentField.setForeground(Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (respondentField.getText().isEmpty()) {
+                    respondentField.setForeground(Color.GRAY);
+                    respondentField.setText("e.g., neighbor or store name");
+                }
+            }
+        });
 
         dynamicPanel.add(dateField, "INCIDENT");
         dynamicPanel.add(respondentField, "COMPLAINT");
+
         card.add(dynamicPanel);
         card.add(Box.createVerticalStrut(15));
 
         // --- PERSONS INVOLVED ---
         JLabel personsLabel = createFieldLabel("Persons Involved");
         card.add(personsLabel);
+        
         JTextField personsField = createModernTextField("e.g., 2 unknown males");
+        personsField.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (personsField.getText().equals("e.g., 2 unknown males")) {
+                    personsField.setText("");
+                    personsField.setForeground(Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (personsField.getText().isEmpty()) {
+                    personsField.setForeground(Color.GRAY);
+                    personsField.setText("e.g., 2 unknown males");
+                }
+            }
+        });
+        
         card.add(personsField);
-        card.add(Box.createVerticalStrut(15));
 
         // --- LOCATION ---
         card.add(createFieldLabel("Location Description"));
+        
         JTextField locationField = createModernTextField("e.g., Near Purok 3 Chapel");
+        locationField.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (locationField.getText().equals("e.g., Near Purok 3 Chapel")) {
+                    locationField.setText("");
+                    locationField.setForeground(Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (locationField.getText().isEmpty()) {
+                    locationField.setForeground(Color.GRAY);
+                    locationField.setText("e.g., Near Purok 3 Chapel");
+                }
+            }
+        });
+        
         card.add(locationField);
-        card.add(Box.createVerticalStrut(15));
 
         // --- DESCRIPTION ---
         card.add(createFieldLabel("Detailed Description"));
+        
         JTextArea descArea = new JTextArea(5, 20);
-        descArea.setText("Describe the incident/complaint in detail...");
-        descArea.setForeground(Color.GRAY);
+        descArea.setText(""); // Start empty
+        descArea.setForeground(Color.BLACK); // Normal text color
         descArea.setFont(new Font("SansSerif", Font.PLAIN, 14));
         descArea.setLineWrap(true);
         descArea.setWrapStyleWord(true);
@@ -1163,27 +1262,51 @@ public class DashboardPanel extends JPanel {
         panel.setBackground(Main.BACKGROUND);
         panel.setBorder(new EmptyBorder(30, 40, 30, 40));
 
-        // 1. HEADER & ACTIONS
-        JPanel headerPanel = new JPanel(new BorderLayout());
+        // ==========================================
+        // 1. HEADER (Title, Filter, Actions)
+        // ==========================================
+        JPanel headerPanel = new JPanel();
+        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
         headerPanel.setOpaque(false);
 
-        JPanel titlePanel = new JPanel();
-        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
-        titlePanel.setOpaque(false);
-
+        // Title
         JLabel title = new JLabel("Report Queue");
         title.setFont(new Font("SansSerif", Font.BOLD, 26));
         title.setForeground(Main.TEXT);
+        title.setAlignmentX(Component.LEFT_ALIGNMENT);
+        headerPanel.add(title);
 
-        JLabel subtitle = new JLabel("Manage and update the status of community reports.");
-        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        subtitle.setForeground(Main.MUTED);
+        // 👇 Space between Title and the filter row 👇
+        headerPanel.add(Box.createVerticalStrut(20));
 
-        titlePanel.add(title);
-        titlePanel.add(Box.createVerticalStrut(5));
-        titlePanel.add(subtitle);
+        // Filter & Actions Row (Horizontal)
+        JPanel controlsRow = new JPanel(new BorderLayout());
+        controlsRow.setOpaque(false);
+        controlsRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        controlsRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
 
-        // Action Buttons
+        // LEFT: Filter Dropdown
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        filterPanel.setOpaque(false);
+
+        JLabel filterLabel = new JLabel("Filter by Status:");
+        filterLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
+        filterLabel.setForeground(Main.TEXT);
+
+        staffStatusFilter = new JComboBox<>(new String[]{"All Statuses", "PENDING", "IN PROGRESS", "RESOLVED"});
+        staffStatusFilter.setPreferredSize(new Dimension(160, 40));
+        staffStatusFilter.setBackground(Color.WHITE);
+
+        // When filter changes, rebuild the panel to apply it
+        staffStatusFilter.addActionListener(e -> {
+            dashboardContent.add(buildStaffPanel(), "staff");
+            contentLayout.show(dashboardContent, "staff");
+        });
+
+        filterPanel.add(filterLabel);
+        filterPanel.add(staffStatusFilter);
+
+        // RIGHT: Action Buttons
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         actions.setOpaque(false);
 
@@ -1196,11 +1319,17 @@ public class DashboardPanel extends JPanel {
         actions.add(progressBtn);
         actions.add(resolvedBtn);
 
-        headerPanel.add(titlePanel, BorderLayout.WEST);
-        headerPanel.add(actions, BorderLayout.EAST);
+        // Combine filter (left) and actions (right)
+        controlsRow.add(filterPanel, BorderLayout.WEST);
+        controlsRow.add(actions, BorderLayout.EAST);
+
+        headerPanel.add(controlsRow);
+
         panel.add(headerPanel, BorderLayout.NORTH);
 
+        // ==========================================
         // 2. TABLE CONFIGURATION
+        // ==========================================
         String[] columns = {"REPORT ID", "REPORTER", "TYPE", "CATEGORY", "DATE SUBMITTED", "STATUS"};
         javax.swing.table.DefaultTableModel model = new javax.swing.table.DefaultTableModel(columns, 0) {
             @Override
@@ -1305,7 +1434,6 @@ public class DashboardPanel extends JPanel {
             }
         });
 
-        // Wrap in ScrollPane
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240), 1));
         scrollPane.getViewport().setBackground(Color.WHITE);
@@ -1350,10 +1478,23 @@ public class DashboardPanel extends JPanel {
     private void refreshStaffTable(JTable table) {
         javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) table.getModel();
         model.setRowCount(0);
+
+        // 👇 Read the filter from the dropdown 👇
+        String filter = "All Statuses";
+        if (staffStatusFilter != null) {
+            filter = (String) staffStatusFilter.getSelectedItem();
+        }
+
         for (Report report : mainApp.getReports()) {
+            // 👇 Apply the filter 👇
+            if (!"All Statuses".equals(filter) && 
+                !report.getStatus().replace('_', ' ').equals(filter)) {
+                continue; // Skip this report
+            }
+
             model.addRow(new Object[]{
                     report.getReportId(),
-                    report.getReporterId(), // Or reporter name if you have it
+                    report.getReporterId(),
                     report.getReportType(),
                     report.getCategory(),
                     report.getDateSubmitted(),
@@ -1378,6 +1519,16 @@ public class DashboardPanel extends JPanel {
                 }
 
                 report.setStatus(newStatus);
+                FileHandler.saveReports(mainApp.getReports());
+
+                // Notify the Resident
+                mainApp.getNotifications().add(0, new Notification(
+                    report.getReporterId(),
+                    reportId,
+                    "Your report " + reportId + " has been updated to " + newStatus.replace('_', ' ')
+                ));
+                FileHandler.saveNotifications(mainApp.getNotifications());
+                
                 updateOverviewText();
                 updateResidentReportList();
                 JOptionPane.showMessageDialog(this, "Report " + reportId + " updated to " + newStatus.replace('_', ' ') + ".", "Success", JOptionPane.INFORMATION_MESSAGE);
@@ -1396,6 +1547,13 @@ public class DashboardPanel extends JPanel {
         panel.setBorder(new EmptyBorder(30, 40, 30, 40));
 
         // 1. HEADER
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setOpaque(false);
+
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        titlePanel.setOpaque(false);
+
         JLabel title = new JLabel("My Reports");
         title.setFont(new Font("SansSerif", Font.BOLD, 26));
         title.setForeground(Main.TEXT);
@@ -1404,12 +1562,25 @@ public class DashboardPanel extends JPanel {
         subtitle.setFont(new Font("SansSerif", Font.PLAIN, 14));
         subtitle.setForeground(Main.MUTED);
 
-        JPanel headerPanel = new JPanel();
-        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
-        headerPanel.setOpaque(false);
-        headerPanel.add(title);
-        headerPanel.add(Box.createVerticalStrut(5));
-        headerPanel.add(subtitle);
+        titlePanel.add(title);
+        titlePanel.add(Box.createVerticalStrut(5));
+        titlePanel.add(subtitle);
+
+        // 👇 ADD THE DROPDOWN 👇
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        filterPanel.setOpaque(false);
+residentStatusFilter = new JComboBox<>(new String[]{"All Statuses", "PENDING", "IN PROGRESS", "RESOLVED"});
+        residentStatusFilter.setPreferredSize(new Dimension(150, 36));
+        residentStatusFilter.setBackground(Color.WHITE);
+        
+        // When the dropdown changes, refresh the table using the existing method!
+        residentStatusFilter.addActionListener(e -> updateResidentReportList());
+        
+        filterPanel.add(new JLabel("Status:"));
+        filterPanel.add(residentStatusFilter);
+
+        headerPanel.add(titlePanel, BorderLayout.WEST);
+        headerPanel.add(filterPanel, BorderLayout.EAST); // Add to right side
         panel.add(headerPanel, BorderLayout.NORTH);
 
         // 2. TABLE CONFIGURATION
@@ -1761,6 +1932,257 @@ public class DashboardPanel extends JPanel {
         dialog.setVisible(true);
     }
 
+    // ==========================================
+    // 12. NOTIFICATIONS PANEL
+    // ==========================================
+    private JPanel buildNotificationPanel() {
+        JPanel panel = new JPanel(new BorderLayout(0, 20));
+        panel.setBackground(Main.BACKGROUND);
+        panel.setBorder(new EmptyBorder(30, 40, 30, 40));
+
+        // 1. HEADER
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setOpaque(false);
+
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        titlePanel.setOpaque(false);
+        
+        JLabel title = new JLabel("Notifications");
+        title.setFont(new Font("SansSerif", Font.BOLD, 26));
+        title.setForeground(Main.TEXT);
+        
+        JLabel subtitle = new JLabel("Click a row to view the report, or click 'Delete' to remove it.");
+        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        subtitle.setForeground(Main.MUTED);
+
+        titlePanel.add(title);
+        titlePanel.add(Box.createVerticalStrut(5));
+        titlePanel.add(subtitle);
+
+        // Actions Panel (Filter + Clear All)
+        JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        actionsPanel.setOpaque(false);
+
+        JComboBox<String> filterCombo = new JComboBox<>(new String[]{"All", "Unread", "Read"});
+        filterCombo.setPreferredSize(new Dimension(120, 36));
+        filterCombo.setBackground(Color.WHITE);
+
+        JButton clearBtn = mainApp.createSecondaryButton("Clear All");
+        clearBtn.setPreferredSize(new Dimension(120, 36));
+        clearBtn.setBackground(new Color(254, 226, 226)); // Soft red
+        clearBtn.setForeground(new Color(220, 38, 38));
+
+        actionsPanel.add(new JLabel("Filter:"));
+        actionsPanel.add(filterCombo);
+        actionsPanel.add(clearBtn);
+
+        headerPanel.add(titlePanel, BorderLayout.WEST);
+        headerPanel.add(actionsPanel, BorderLayout.EAST);
+        panel.add(headerPanel, BorderLayout.NORTH);
+
+        // 2. TABLE
+        String[] columns = {"DATE", "MESSAGE", "STATUS", "ACTION"};
+        javax.swing.table.DefaultTableModel model = new javax.swing.table.DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+
+        JTable table = new JTable(model);
+        table.setRowHeight(60);
+        table.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        table.setBackground(Color.WHITE);
+        table.setShowVerticalLines(false);
+        table.setShowHorizontalLines(true);
+        table.setGridColor(new Color(241, 245, 249));
+        table.setIntercellSpacing(new Dimension(0, 1));
+        table.setFillsViewportHeight(true);
+        table.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Custom Header Renderer
+        javax.swing.table.JTableHeader header = table.getTableHeader();
+        header.setPreferredSize(new Dimension(0, 45));
+        header.setBorder(null);
+        header.setDefaultRenderer(new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                label.setBackground(new Color(248, 250, 252));
+                label.setForeground(new Color(71, 85, 105));
+                label.setFont(new Font("SansSerif", Font.BOLD, 12));
+                label.setHorizontalAlignment(SwingConstants.LEFT);
+                label.setBorder(new EmptyBorder(0, 15, 0, 15));
+                return label;
+            }
+        });
+
+        // Custom Cell Renderer
+        table.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                label.setBorder(new EmptyBorder(0, 15, 0, 15)); 
+                label.setFont(new Font("SansSerif", Font.PLAIN, 14));
+                label.setHorizontalAlignment(SwingConstants.LEFT);
+                
+                if (isSelected) {
+                    label.setBackground(new Color(241, 245, 249));
+                } else {
+                    label.setBackground(Color.WHITE);
+                }
+
+                label.setForeground(Main.TEXT);
+
+                if (column == 2) { // STATUS COLUMN
+                    String status = value != null ? value.toString() : "";
+                    JPanel pillPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+                    pillPanel.setBackground(isSelected ? new Color(241, 245, 249) : Color.WHITE);
+                    JLabel pill = new JLabel(status, SwingConstants.CENTER);
+                    pill.setOpaque(true);
+                    pill.setFont(new Font("SansSerif", Font.BOLD, 11));
+                    pill.setBorder(new EmptyBorder(6, 12, 6, 12));
+                    
+                    if (status.equals("UNREAD")) {
+                        pill.setBackground(new Color(254, 243, 199)); 
+                        pill.setForeground(new Color(180, 83, 9));   
+                    } else {
+                        pill.setBackground(new Color(241, 245, 249)); 
+                        pill.setForeground(new Color(100, 116, 139));   
+                    }
+                    pill.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(pill.getBackground(), 4, true),
+                            new EmptyBorder(1, 7, 1, 7)
+                    ));
+                    pillPanel.add(pill);
+                    return pillPanel;
+                    
+                } else if (column == 3) { // ACTION COLUMN
+                    label.setText("Delete");
+                    label.setForeground(new Color(220, 38, 38)); // Red
+                    label.setFont(new Font("SansSerif", Font.BOLD, 13));
+                }
+                
+                return label;
+            }
+        });
+
+        // 3. POPULATE TABLE LOGIC (Put in a helper so filter can call it)
+        Runnable refreshTable = () -> {
+            model.setRowCount(0);
+            User currentUser = mainApp.getCurrentUser();
+            String filter = (String) filterCombo.getSelectedItem();
+            boolean hasChanges = false;
+            
+            for (Notification n : mainApp.getNotifications()) {
+                if (n.getRecipientId().equals(currentUser.getId())) {
+                    // Apply Filter
+                    if ("Unread".equals(filter) && n.isRead()) continue;
+                    if ("Read".equals(filter) && !n.isRead()) continue;
+                    
+                    model.addRow(new Object[]{
+                        n.getTimestamp(),
+                        n.getMessage(),
+                        n.isRead() ? "READ" : "UNREAD",
+                        "" // Action column is rendered as "Delete"
+                    });
+                    
+                    // Mark as read if unread
+                    if (!n.isRead()) {
+                        n.setRead(true);
+                        hasChanges = true;
+                    }
+                }
+            }
+            
+            if (hasChanges) {
+                FileHandler.saveNotifications(mainApp.getNotifications());
+            }
+        };
+
+        // Trigger refresh when filter changes
+        filterCombo.addActionListener(e -> refreshTable.run());
+
+        // Trigger refresh when Clear All clicked
+        clearBtn.addActionListener(e -> {
+            User currentUser = mainApp.getCurrentUser();
+            mainApp.getNotifications().removeIf(n -> n.getRecipientId().equals(currentUser.getId()));
+            FileHandler.saveNotifications(mainApp.getNotifications());
+            refreshTable.run();
+        });
+
+        // 4. CLICK LISTENER (View Report OR Delete)
+        table.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                int row = table.getSelectedRow();
+                int col = table.getSelectedColumn();
+                if (row != -1) {
+                    User currentUser = mainApp.getCurrentUser();
+                    
+                    // Find the notification object for this row
+                    Notification targetNotification = null;
+                    int currentIndex = -1;
+                    for (Notification n : mainApp.getNotifications()) {
+                        if (n.getRecipientId().equals(currentUser.getId())) {
+                            currentIndex++;
+                            if (currentIndex == row) {
+                                targetNotification = n;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (targetNotification != null) {
+                        if (col == 3) { 
+                            // Delete button clicked
+                            mainApp.getNotifications().remove(targetNotification);
+                            FileHandler.saveNotifications(mainApp.getNotifications());
+                            refreshTable.run();
+                        } else {
+                            // View Report clicked (any other column)
+                            String targetReportId = targetNotification.getReportId();
+                            for (Report report : mainApp.getReports()) {
+                                if (report.getReportId().equals(targetReportId)) {
+                                    
+                                    // Switch to My Reports / Staff Panel first
+                                    if (currentUser instanceof Resident) {
+                                        updateResidentReportList();
+                                        activateSidebarButton(myReportsNavigation);
+                                        contentLayout.show(dashboardContent, "myReports");
+                                    } else {
+                                        dashboardContent.add(buildStaffPanel(), "staff");
+                                        activateSidebarButton(staffNavigation);
+                                        contentLayout.show(dashboardContent, "staff");
+                                    }
+                                    
+                                    // Then open modal
+                                    SwingUtilities.invokeLater(() -> showReportDetails(report));
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240), 1));
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        
+        JPanel tableCard = new JPanel(new BorderLayout());
+        tableCard.setBackground(Color.WHITE);
+        tableCard.setBorder(new EmptyBorder(10, 10, 10, 10));
+        tableCard.add(scrollPane, BorderLayout.CENTER);
+
+        panel.add(tableCard, BorderLayout.CENTER);
+
+        // Initial load
+        refreshTable.run();
+        
+        return panel;
+    }
+
     private void activateSidebarButton(JButton selected) {
         if (activeSidebarButton != null) {
             activeSidebarButton.setBackground(Color.WHITE);
@@ -1788,9 +2210,21 @@ public class DashboardPanel extends JPanel {
 
     private void updateResidentReportList() {
         if (residentReportTableModel == null) return;
-
         residentReportTableModel.setRowCount(0); // Clear existing rows
+
+        // 👇 Read the filter from the dropdown 👇
+        String filter = "All Statuses";
+        if (residentStatusFilter != null) {
+            filter = (String) residentStatusFilter.getSelectedItem();
+        }
+
         for (Report report : getVisibleReports()) {
+            // 👇 Apply the filter 👇
+            if (!"All Statuses".equals(filter) && 
+                !report.getStatus().replace('_', ' ').equals(filter)) {
+                continue; // Skip this report
+            }
+
             residentReportTableModel.addRow(new Object[]{
                     report.getReportId(),
                     report.getReportType(),
@@ -2061,7 +2495,10 @@ public class DashboardPanel extends JPanel {
 
         gbc.gridy = 4;
         gbc.insets = new Insets(0, 0, 0, 0);
-        JLabel historyEntry = new JLabel("<html><span style='color:#64748B; font-family:monospace;'>Oct 5, 2026, 08:00 AM</span> &nbsp; Initial assessment done.</html>");
+        JLabel historyEntry = new JLabel("<html><span style='color:#64748B; font-family:monospace;'>" 
+            + report.getDateSubmitted() 
+            + "</span> &nbsp; Report filed by resident.</html>");
+            
         historyEntry.setFont(new Font("SansSerif", Font.PLAIN, 14));
         contentPanel.add(historyEntry, gbc);
 
@@ -2075,6 +2512,7 @@ public class DashboardPanel extends JPanel {
         dialog.setShape(new java.awt.geom.RoundRectangle2D.Double(0, 0, dialog.getWidth(), dialog.getHeight(), 15, 15));
 
         dialog.setVisible(true);
+
     }
 
     private JLabel createMetaLabel(String text) {
@@ -2124,10 +2562,32 @@ public class DashboardPanel extends JPanel {
                 : new ComplaintReport(id, currentUser.getId(), categoryValue, locationValue, descriptionValue,
                 LocalDate.now().toString(), "PENDING", detailValue);
 
-        mainApp.getReports().add(report);
-
+        mainApp.getReports().add(0, report);
         // ---> SAVE TO FILE <---
         FileHandler.saveReports(mainApp.getReports());
+
+        // Notify all Staff and Admins (Unique only)
+        boolean hasChanges = false;
+        ArrayList<String> notifiedUsers = new ArrayList<>(); // To prevent duplicates
+        
+        for (User u : mainApp.getUsers()) {
+            if (u instanceof BarangayStaff) { 
+                // Only add the notification if we haven't already notified this user
+                if (!notifiedUsers.contains(u.getId())) {
+                    mainApp.getNotifications().add(0, new Notification(
+                        u.getId(), 
+                        id, 
+                        "New " + (isIncident ? "Incident" : "Complaint") + " report filed by " + currentUser.getFirstName()
+                    ));
+                    notifiedUsers.add(u.getId());
+                    hasChanges = true;
+                }
+            }
+        }
+        
+        if (hasChanges) {
+            FileHandler.saveNotifications(mainApp.getNotifications());
+        }
 
         JOptionPane.showMessageDialog(this, "Report submitted successfully!\nID: " + id,
                 "Success", JOptionPane.INFORMATION_MESSAGE);
