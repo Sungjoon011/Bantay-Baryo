@@ -6,7 +6,9 @@ import java.util.ArrayList;
 public class FileHandler {
     private static final String USERS_FILE = "users.dat";
     private static final String REPORTS_FILE = "reports.dat";
+    private static final String NOTIFICATIONS_FILE = "notifications.dat";
 
+    
     public static void saveUsers(ArrayList<User> users) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(USERS_FILE))) {
             oos.writeObject(users);
@@ -48,4 +50,26 @@ public class FileHandler {
         }
         return new ArrayList<>();
     }
+
+        public static void saveNotifications(ArrayList<Notification> notifications) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(NOTIFICATIONS_FILE))) {
+            oos.writeObject(notifications);
+        } catch (IOException e) {
+            System.out.println("Error saving notifications: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static ArrayList<Notification> loadNotifications() {
+        File file = new File(NOTIFICATIONS_FILE);
+        if (file.exists()) {
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                return (ArrayList<Notification>) ois.readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                System.out.println("Error loading notifications: " + e.getMessage());
+            }
+        }
+        return new ArrayList<>();
+    }
+
 }

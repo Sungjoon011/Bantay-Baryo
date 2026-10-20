@@ -1,10 +1,10 @@
 package bantaybaryo;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 public class Main extends JFrame {
     public static final Color PRIMARY = Color.decode("#1E3A8A");
@@ -22,6 +22,7 @@ public class Main extends JFrame {
 
     private ArrayList<User> users;
     private ArrayList<Report> reports;
+    private ArrayList<Notification> notifications;
 
     private User currentUser;
     private DashboardPanel dashboardPanel;
@@ -36,14 +37,17 @@ public class Main extends JFrame {
         // Load existing data from files
         users = FileHandler.loadUsers();
         reports = FileHandler.loadReports();
-
+        notifications = FileHandler.loadNotifications();
+        
         // If files are empty (first time running), seed default accounts and save them
         if (users.isEmpty()) {
             users = new ArrayList<>();
             reports = new ArrayList<>();
+            notifications = new ArrayList<>();
             seedData();
             FileHandler.saveUsers(users);
             FileHandler.saveReports(reports);
+            FileHandler.saveNotifications(notifications);
         }
 
         dashboardPanel = new DashboardPanel(mainLayout, mainPanel, this);
@@ -91,7 +95,12 @@ public class Main extends JFrame {
     public void setCurrentUser(User user) { this.currentUser = user; }
     public ArrayList<Report> getReports() { return reports; }
 
+    
     public ArrayList<User> getUsers() { return users; }
+
+        public ArrayList<Notification> getNotifications() {
+        return notifications;
+    }
 
     public JPanel createCard() {
         JPanel panel = new JPanel();
