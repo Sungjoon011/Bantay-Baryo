@@ -1,8 +1,8 @@
 package bantaybaryo;
 
+import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
 
 public class LoginPanel extends JPanel {
 
@@ -135,7 +135,20 @@ public class LoginPanel extends JPanel {
                 new EmptyBorder(10, 24, 10, 24)));
 
         logIn.addActionListener(e -> {
-            User user = mainApp.authenticate(username.getText().trim(), new String(password.getPassword()));
+            String userStr = username.getText().trim();
+            String passStr = new String(password.getPassword());
+
+            // 👇 1. CHECK FOR EMPTY FIELDS FIRST 👇
+            if (userStr.isEmpty() || passStr.isEmpty()) {
+                JOptionPane.showMessageDialog(this, 
+                    "Please enter both username and password.", 
+                    "Required Fields", 
+                    JOptionPane.WARNING_MESSAGE);
+                return; // Stop right here
+            }
+
+            // 👇 2. THEN CHECK CREDENTIALS 👇
+            User user = mainApp.authenticate(userStr, passStr);
             if (user == null) {
                 JOptionPane.showMessageDialog(this, "Invalid username or password.", "Login Failed",
                         JOptionPane.ERROR_MESSAGE);
@@ -143,6 +156,7 @@ public class LoginPanel extends JPanel {
                 return;
             }
 
+            // 👇 3. SUCCESSFUL LOGIN 👇
             mainApp.setCurrentUser(user);
             mainApp.updateDashboardForUser();
             mainLayout.show(mainPanel, "dashboard");

@@ -34,7 +34,7 @@ public class DashboardPanel extends JPanel {
     private JButton staffNavigation;
     private JButton profileNavigation;
     private JButton adminNavigation;
-    private JButton notificationsNavigation;
+    private BadgeButton notificationsNavigation;
     private JComboBox<String> residentStatusFilter;
     private JComboBox<String> staffStatusFilter;
 
@@ -119,7 +119,45 @@ public class DashboardPanel extends JPanel {
         staffNavigation = createSidebarButton("Report Queue");
         profileNavigation = createSidebarButton("My Profile");
         adminNavigation = createSidebarButton("Manage Users");
-        notificationsNavigation = createSidebarButton("Notifications");
+        notificationsNavigation = new BadgeButton("Notifications");
+        
+        notificationsNavigation.setHorizontalAlignment(SwingConstants.CENTER);
+        notificationsNavigation.setMaximumSize(new Dimension(175, 44));
+        notificationsNavigation.setPreferredSize(new Dimension(175, 44));
+        notificationsNavigation.setAlignmentX(Component.CENTER_ALIGNMENT);
+        notificationsNavigation.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Main.BORDER, 1),
+                new EmptyBorder(9, 12, 9, 12)));
+        notificationsNavigation.setFocusPainted(false);
+        notificationsNavigation.setContentAreaFilled(true);
+        notificationsNavigation.setOpaque(true);
+        notificationsNavigation.setBackground(Color.WHITE);
+        notificationsNavigation.setForeground(Main.TEXT);
+        notificationsNavigation.setFont(new Font("SansSerif", Font.BOLD, 13));
+        notificationsNavigation.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Add hover effects manually since we aren't using the helper method
+        notificationsNavigation.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent event) {
+                if (notificationsNavigation != activeSidebarButton) {
+                    notificationsNavigation.setBackground(new Color(239, 246, 255));
+                    notificationsNavigation.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(Main.SECONDARY, 1),
+                            new EmptyBorder(9, 12, 9, 12)));
+                }
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent event) {
+                if (notificationsNavigation != activeSidebarButton) {
+                    notificationsNavigation.setBackground(Color.WHITE);
+                    notificationsNavigation.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(Main.BORDER, 1),
+                            new EmptyBorder(9, 12, 9, 12)));
+                }
+            }
+        });
+
 
 
         // --- Sidebar Button Actions ---
@@ -156,6 +194,7 @@ public class DashboardPanel extends JPanel {
 
         notificationsNavigation.addActionListener(e -> {
             activateSidebarButton(notificationsNavigation);
+            notificationsNavigation.setBadge(false); // 👈 Turn off the red dot
             // We rebuild the panel every time so it shows the latest notifications
             dashboardContent.add(buildNotificationPanel(), "notifications");
             contentLayout.show(dashboardContent, "notifications");
@@ -273,6 +312,17 @@ public class DashboardPanel extends JPanel {
 
         // Rebuild the profile panel so it's ready for the new user
         dashboardContent.add(buildProfilePanel(), "profile");
+
+        boolean hasUnread = false;
+        for (Notification n : mainApp.getNotifications()) {
+            if (n.getRecipientId().equals(currentUser.getId()) && !n.isRead()) {
+                hasUnread = true;
+                break;
+            }
+        }
+        if (notificationsNavigation != null) {
+            notificationsNavigation.setBadge(hasUnread); // 👈 Turn on the red dot
+        }
     }
 
     // ==========================================
@@ -339,19 +389,13 @@ public class DashboardPanel extends JPanel {
         // Row 1 Fields
         gbc.gridy = 2;
         gbc.insets = new Insets(0, 0, 15, 15);
-        JTextField firstNameField = createModernTextField(user.getFirstName());
+        JTextField firstNameField = createModernTextField("");
+        setupProfileField(firstNameField, user.getFirstName());
         gbc.gridx = 0;
         personalCard.add(firstNameField, gbc);
 
-        // Middle Name Optional Logic
-        JTextField middleNameField;
-        String mName = user.getMiddleName();
-        if (mName == null || mName.isEmpty()) {
-            middleNameField = createModernTextField("Optional");
-            middleNameField.setForeground(Color.GRAY);
-        } else {
-            middleNameField = createModernTextField(mName);
-        }
+        JTextField middleNameField = createModernTextField("");
+        setupProfileField(middleNameField, user.getMiddleName());
         gbc.gridx = 1;
         personalCard.add(middleNameField, gbc);
 
@@ -366,12 +410,13 @@ public class DashboardPanel extends JPanel {
         // Row 2 Fields
         gbc.gridy = 4;
         gbc.insets = new Insets(0, 0, 15, 15);
-        JTextField lastNameField = createModernTextField(user.getLastName());
+        JTextField lastNameField = createModernTextField("");
+        setupProfileField(lastNameField, user.getLastName());
         gbc.gridx = 0;
         personalCard.add(lastNameField, gbc);
 
-        // Contact Number (Assuming you added getContactNumber/setContactNumber to User.java)
-        JTextField contactField = createModernTextField(user.getContactNumber());
+        JTextField contactField = createModernTextField("");
+        setupProfileField(contactField, user.getContactNumber());
         gbc.gridx = 1;
         personalCard.add(contactField, gbc);
 
@@ -392,18 +437,13 @@ public class DashboardPanel extends JPanel {
             gbc.gridy = 6;
             gbc.insets = new Insets(0, 0, 20, 15);
 
-            purokField = createModernTextField(res.getPurok());
+            purokField = createModernTextField("");
+            setupProfileField(purokField, res.getPurok());
             gbc.gridx = 0;
             personalCard.add(purokField, gbc);
 
-            // Sitio Optional Logic
-            String sName = res.getSitio();
-            if (sName == null || sName.isEmpty()) {
-                sitioField = createModernTextField("Optional");
-                sitioField.setForeground(Color.GRAY);
-            } else {
-                sitioField = createModernTextField(sName);
-            }
+            sitioField = createModernTextField("");
+            setupProfileField(sitioField, res.getSitio());
             gbc.gridx = 1;
             personalCard.add(sitioField, gbc);
         }
@@ -448,6 +488,8 @@ public class DashboardPanel extends JPanel {
 
             // Update the top bar text
             mainApp.updateDashboardForUser();
+
+            FileHandler.saveUsers(mainApp.getUsers());
 
             JOptionPane.showMessageDialog(this, "Profile updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
         });
@@ -525,6 +567,9 @@ public class DashboardPanel extends JPanel {
                 return;
             }
             user.setPassword(newPass);
+
+            FileHandler.saveUsers(mainApp.getUsers()); 
+
             newPassField.setText("");
             confirmPassField.setText("");
             JOptionPane.showMessageDialog(this, "Password updated!", "Success", JOptionPane.INFORMATION_MESSAGE);
@@ -678,11 +723,12 @@ public class DashboardPanel extends JPanel {
                 int row = table.getSelectedRow();
                 int col = table.getSelectedColumn();
 
+                // Only trigger if they clicked the ACTIONS column (column 4)
                 if (row != -1 && col == 4) {
                     String userId = (String) table.getValueAt(row, 0);
                     User selectedUser = null;
 
-                    // Get users from Main
+                    // Find the user
                     for (User u : mainApp.getUsers()) {
                         if (u.getId().equals(userId)) {
                             selectedUser = u;
@@ -690,24 +736,35 @@ public class DashboardPanel extends JPanel {
                         }
                     }
 
-                    if (selectedUser != null && "ACTIVE".equals(selectedUser.getStatus())) {
-                        int confirm = JOptionPane.showConfirmDialog(null,
-                                "Are you sure you want to deactivate " + selectedUser.getFullName() + "?",
-                                "Confirm Deactivation", JOptionPane.YES_NO_OPTION);
+                    if (selectedUser != null) {
+                        // 👇 CHECK IF ACTIVE OR INACTIVE TO TOGGLE 👇
+                        if ("ACTIVE".equals(selectedUser.getStatus())) {
+                            // Deactivate Logic
+                            int confirm = JOptionPane.showConfirmDialog(null,
+                                    "Are you sure you want to deactivate " + selectedUser.getFullName() + "?",
+                                    "Confirm Deactivation", JOptionPane.YES_NO_OPTION);
 
-                        if (confirm == JOptionPane.YES_OPTION) {
-                            selectedUser.setStatus("INACTIVE");
+                            if (confirm == JOptionPane.YES_OPTION) {
+                                selectedUser.setStatus("INACTIVE");
+                                FileHandler.saveUsers(mainApp.getUsers()); // Save to file!
+                                refreshAdminTable(table);
+                            }
+                        } else {
+                            // Reactivate Logic
+                            int confirm = JOptionPane.showConfirmDialog(null,
+                                    "Are you sure you want to reactivate " + selectedUser.getFullName() + "?",
+                                    "Confirm Reactivation", JOptionPane.YES_NO_OPTION);
 
-                            // 👇 YOUR GROUPMATE WILL ADD THE FILE SAVING HERE LATER 👇
-                            // mainApp.getUserManager().saveUsers();
-
-                            refreshAdminTable(table);
+                            if (confirm == JOptionPane.YES_OPTION) {
+                                selectedUser.setStatus("ACTIVE");
+                                FileHandler.saveUsers(mainApp.getUsers()); // Save to file!
+                                refreshAdminTable(table);
+                            }
                         }
                     }
                 }
             }
         });
-
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240), 1));
         scrollPane.getViewport().setBackground(Color.WHITE);
@@ -1870,7 +1927,7 @@ residentStatusFilter = new JComboBox<>(new String[]{"All Statuses", "PENDING", "
         gbc.gridx = 0;
         formPanel.add(roleCombo, gbc);
 
-        JTextField passwordField = createModernTextField("pass");
+        JTextField passwordField = createModernTextField("");
         gbc.gridx = 1;
         formPanel.add(passwordField, gbc);
 
@@ -1892,6 +1949,18 @@ residentStatusFilter = new JComboBox<>(new String[]{"All Statuses", "PENDING", "
 
         dialog.add(wrapper);
         dialog.setShape(new java.awt.geom.RoundRectangle2D.Double(0, 0, dialog.getWidth(), dialog.getHeight(), 15, 15));
+
+        JTextField[] textFields = {firstNameField, middleNameField, lastNameField, usernameField, contactField, passwordField};
+            for (JTextField tf : textFields) {
+                tf.setForeground(Color.BLACK);
+                tf.addFocusListener(new java.awt.event.FocusAdapter() {
+                    @Override
+                    public void focusGained(java.awt.event.FocusEvent evt) {
+                        tf.setForeground(Color.BLACK);
+                    }
+                });
+        }
+
 
         // 5. CREATE LOGIC
         submitBtn.addActionListener(e -> {
@@ -1920,6 +1989,8 @@ residentStatusFilter = new JComboBox<>(new String[]{"All Statuses", "PENDING", "
 
             if (newUser != null) {
                 mainApp.getUsers().add(newUser);
+
+                FileHandler.saveUsers(mainApp.getUsers());  // Save the updated users list to the file
 
                 dashboardContent.add(buildAdminPanel(), "admin");
                 contentLayout.show(dashboardContent, "admin");
@@ -2607,5 +2678,61 @@ residentStatusFilter = new JComboBox<>(new String[]{"All Statuses", "PENDING", "
         // Automatically switch to the "My Reports" tab to show the new report
         activateSidebarButton(myReportsNavigation);
         contentLayout.show(dashboardContent, "myReports");
+
+
+    }
+
+        private void setupProfileField(JTextField field, String realValue) {
+        if (realValue == null || realValue.trim().isEmpty() || realValue.equals("Optional")) {
+            field.setText(realValue.equals("Optional") ? "Optional" : "");
+            field.setForeground(Color.GRAY); 
+        } else {
+            field.setText(realValue);
+            field.setForeground(Color.BLACK);
+        }
+        
+        field.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (field.getText().equals("Optional")) {
+                    field.setText("");
+                    field.setForeground(Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (field.getText().isEmpty()) {
+                    field.setForeground(Color.GRAY);
+                    field.setText("Optional");
+                }
+            }
+        });
+    }
+    
+
+        class BadgeButton extends JButton {
+        private boolean hasBadge = false;
+
+        public BadgeButton(String text) {
+            super(text);
+        }
+
+        public void setBadge(boolean hasBadge) {
+            this.hasBadge = hasBadge;
+            repaint(); // Redraw the button
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (hasBadge) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(239, 68, 68)); // Red color
+                // Draw the circle in the top right corner
+                g2.fillOval(getWidth() - 20, 10, 10, 10); 
+                g2.dispose();
+            }
+        }
     }
 }
