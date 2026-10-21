@@ -63,8 +63,6 @@ Barangay Staff can:
   - Total reports
 - View the complete report queue.
 - Filter reports by status.
-  - The queue refreshes in place when the status selection changes.
-  - Supported filters include All Statuses, `PENDING`, `IN PROGRESS`, and `RESOLVED`.
 - Open detailed report information.
 - Mark reports as `IN_PROGRESS`.
 - Mark reports as `RESOLVED`.
@@ -105,7 +103,7 @@ The application includes a notification system that:
 
 Reports follow a status workflow:
 
-```
+```text
 PENDING → IN_PROGRESS → RESOLVED
 ```
 
@@ -176,7 +174,7 @@ Examples:
 
 Specialized classes inherit common functionality from parent classes.
 
-```
+```text
 User
 ├── Resident
 └── BarangayStaff
@@ -202,6 +200,7 @@ The application stores data locally using Java object serialization.
 The following files are created in the project root:
 
 | File | Purpose |
+|---|---|
 | `users.dat` | Stores registered user accounts |
 | `reports.dat` | Stores incident and complaint reports |
 | `notifications.dat` | Stores user notifications |
@@ -223,7 +222,7 @@ The application automatically creates sample data when no user data exists.
 
 ## 📁 Project Structure
 
-```
+```text
 Bantay-Baryo/
 ├── bantaybaryo/
 │   ├── Admin.java
@@ -283,7 +282,7 @@ No external database or third-party library is required.
 
 4. Locate:
 
-   ```
+   ```text
    bantaybaryo/Main.java
    ```
 
@@ -316,6 +315,7 @@ bantaybaryo/resources/logo.png
 When the application is launched for the first time without existing user data, sample accounts are created automatically.
 
 | Role | Username | Password |
+|---|---|---|
 | Resident | `user` | `user123` |
 | Barangay Staff | `staff` | `staff123` |
 | Admin | `admin` | `admin123` |
@@ -328,7 +328,7 @@ When the application is launched for the first time without existing user data, 
 
 ### Resident Workflow
 
-```
+```text
 Login
   ↓
 File a Report
@@ -344,7 +344,7 @@ Receive status notifications
 
 ### Staff Workflow
 
-```
+```text
 Login
   ↓
 Open Report Queue
@@ -360,7 +360,7 @@ Resident receives a notification
 
 ### Administrator Workflow
 
-```
+```text
 Login
   ↓
 Manage Users
