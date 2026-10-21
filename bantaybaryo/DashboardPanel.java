@@ -44,6 +44,28 @@ public class DashboardPanel extends JPanel {
     private JPanel statsPanel;
 
 
+
+    private static final String[] INCIDENT_CATEGORIES = {
+        "Select a Category...", "Theft / Robbery", "Physical Fight / Assault",
+        "Vandalism / Property Damage", "Accident", "Fire",
+        "Flooding / Natural Disaster", "Missing Person", "Public Safety Hazard", "Others"
+    };
+
+    private static final String[] COMPLAINT_CATEGORIES = {
+        "Select a Category...", 
+        "Noise Disturbance (e.g., videoke)", 
+        "Boundary Dispute", 
+        "Debt / Utang Dispute",
+        "Improper Waste Disposal / Sanitation", 
+        "Stray or Unleashed Animals", 
+        "Neighbor Dispute / Minor Quarrel", 
+        "Obstruction / Illegal Construction", 
+        "Violation of Barangay Ordinances (Curfew, etc.)", 
+        "Concern about Barangay Service / Official", 
+        "Poor Infrastructure (e.g., broken streetlight)", 
+        "Others"
+    };
+
     public DashboardPanel(CardLayout mainLayout, JPanel mainPanel, Main mainApp) {
         this.mainApp = mainApp;
         setLayout(new BorderLayout());
@@ -113,7 +135,7 @@ public class DashboardPanel extends JPanel {
 
 
         // --- Create Sidebar Buttons ---
-        overviewNavigation = createSidebarButton("Dashboard");
+        overviewNavigation = createSidebarButton("Overview");
         residentNavigation = createSidebarButton("File a Report");
         myReportsNavigation = createSidebarButton("My Reports");
         staffNavigation = createSidebarButton("Report Queue");
@@ -177,8 +199,6 @@ public class DashboardPanel extends JPanel {
 
         staffNavigation.addActionListener(e -> {
             activateSidebarButton(staffNavigation);
-            // 👇 Rebuild the Staff Panel every time it's clicked to get fresh data!
-            dashboardContent.add(buildStaffPanel(), "staff");
             contentLayout.show(dashboardContent, "staff");
         });
 
@@ -290,7 +310,7 @@ public class DashboardPanel extends JPanel {
 
         // 3. Reset the view based on the role
         overviewStatusFilter = null;
-        overviewTitle.setText(isResident ? "My Report Overview" : "Dashboard");
+        overviewTitle.setText(isResident ? "My Report Overview" : "Overview");
 
         if (isResident) {
             // Residents land on "My Reports" and see it active
@@ -848,7 +868,7 @@ public class DashboardPanel extends JPanel {
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
         titlePanel.setOpaque(false);
 
-        overviewTitle = new JLabel("Dashboard");
+        overviewTitle = new JLabel("Overview");
         overviewTitle.setFont(new Font("SansSerif", Font.BOLD, 22));
         overviewTitle.setForeground(Main.TEXT);
 
@@ -1089,10 +1109,7 @@ public class DashboardPanel extends JPanel {
         // --- CATEGORY ---
         
         card.add(createFieldLabel("Category"));
-        JComboBox<String> categoryBox = new JComboBox<>(new String[]{
-                "Select a Category...", "Noise Disturbance", "Sanitation", "Infrastructure",
-                "Boundary Dispute", "Public Safety", "Others"
-        });
+        JComboBox<String> categoryBox = new JComboBox<>(INCIDENT_CATEGORIES);
 
         categoryBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
         categoryBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
@@ -1236,13 +1253,16 @@ public class DashboardPanel extends JPanel {
             // Pass the incident radio button to check if it's selected
             submitReport(rdoIncident, categoryBox, locationField, personsField, descArea);
         });
+
         // --- LOGIC FOR SWAPPING FIELDS ---
         CardLayout cl = (CardLayout) dynamicPanel.getLayout();
+        
         rdoIncident.addActionListener(e -> {
             dynamicLabel.setText("Incident Date & Time");
             cl.show(dynamicPanel, "INCIDENT");
             personsLabel.setVisible(true);
             personsField.setVisible(true);
+            categoryBox.setModel(new javax.swing.DefaultComboBoxModel<>(INCIDENT_CATEGORIES));
         });
 
         rdoComplaint.addActionListener(e -> {
@@ -1250,6 +1270,7 @@ public class DashboardPanel extends JPanel {
             cl.show(dynamicPanel, "COMPLAINT");
             personsLabel.setVisible(false);
             personsField.setVisible(false);
+            categoryBox.setModel(new javax.swing.DefaultComboBoxModel<>(COMPLAINT_CATEGORIES));
         });
 
         // 3. ASSEMBLE
@@ -1354,11 +1375,6 @@ public class DashboardPanel extends JPanel {
         staffStatusFilter.setPreferredSize(new Dimension(160, 40));
         staffStatusFilter.setBackground(Color.WHITE);
 
-        // When filter changes, rebuild the panel to apply it
-        staffStatusFilter.addActionListener(e -> {
-            dashboardContent.add(buildStaffPanel(), "staff");
-            contentLayout.show(dashboardContent, "staff");
-        });
 
         filterPanel.add(filterLabel);
         filterPanel.add(staffStatusFilter);
@@ -1526,7 +1542,9 @@ public class DashboardPanel extends JPanel {
         });
 
         // Populate table initially
-        refreshStaffTable(table);
+        staffStatusFilter.addActionListener(e -> refreshStaffTable(table));
+
+        refreshStaffTable(table); 
 
         return panel;
     }
@@ -1536,16 +1554,17 @@ public class DashboardPanel extends JPanel {
         javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) table.getModel();
         model.setRowCount(0);
 
-        // 👇 Read the filter from the dropdown 👇
         String filter = "All Statuses";
-        if (staffStatusFilter != null) {
-            filter = (String) staffStatusFilter.getSelectedItem();
+        // 👇 ADDED NULL CHECK: This fixes the empty table on the first load
+        if (staffStatusFilter != null && staffStatusFilter.getSelectedItem() != null) {
+            filter = staffStatusFilter.getSelectedItem().toString();
         }
 
         for (Report report : mainApp.getReports()) {
+            String displayStatus = report.getStatus().replace('_', ' ');
+            
             // 👇 Apply the filter 👇
-            if (!"All Statuses".equals(filter) && 
-                !report.getStatus().replace('_', ' ').equals(filter)) {
+            if (!"All Statuses".equals(filter) && !displayStatus.equals(filter)) {
                 continue; // Skip this report
             }
 
@@ -1555,7 +1574,7 @@ public class DashboardPanel extends JPanel {
                     report.getReportType(),
                     report.getCategory(),
                     report.getDateSubmitted(),
-                    report.getStatus().replace('_', ' ')
+                    displayStatus
             });
         }
     }
@@ -2554,24 +2573,6 @@ residentStatusFilter = new JComboBox<>(new String[]{"All Statuses", "PENDING", "
 
         contentPanel.add(descScroll, gbc);
 
-        // --- ACTION HISTORY ---
-        gbc.gridy = 3;
-        gbc.insets = new Insets(0, 0, 10, 0);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weighty = 0; // Stop stretching here
-        JLabel historyTitle = new JLabel("Action History Trail");
-        historyTitle.setFont(new Font("SansSerif", Font.BOLD, 16));
-        historyTitle.setForeground(Main.TEXT);
-        contentPanel.add(historyTitle, gbc);
-
-        gbc.gridy = 4;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        JLabel historyEntry = new JLabel("<html><span style='color:#64748B; font-family:monospace;'>" 
-            + report.getDateSubmitted() 
-            + "</span> &nbsp; Report filed by resident.</html>");
-            
-        historyEntry.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        contentPanel.add(historyEntry, gbc);
 
         // 3. ASSEMBLE
         wrapper.add(headerPanel, BorderLayout.NORTH);
@@ -2616,8 +2617,9 @@ residentStatusFilter = new JComboBox<>(new String[]{"All Statuses", "PENDING", "
             descriptionValue = "";
         }
 
-        if (categoryValue.isEmpty() || locationValue.isEmpty() || descriptionValue.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please fill in all required fields.", "Missing Details", JOptionPane.WARNING_MESSAGE);
+        // Use category.getSelectedIndex() == 0 to ensure they actually picked a category
+        if (category.getSelectedIndex() == 0 || locationValue.isEmpty() || descriptionValue.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill in all required fields and select a category.", "Missing Details", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
