@@ -37,6 +37,7 @@ public class DashboardPanel extends JPanel {
     private BadgeButton notificationsNavigation;
     private JComboBox<String> residentStatusFilter;
     private JComboBox<String> staffStatusFilter;
+    private JTable staffReportTable;
 
     private JButton activeSidebarButton;
     private String overviewStatusFilter;
@@ -1354,10 +1355,11 @@ public class DashboardPanel extends JPanel {
         staffStatusFilter.setPreferredSize(new Dimension(160, 40));
         staffStatusFilter.setBackground(Color.WHITE);
 
-        // When filter changes, rebuild the panel to apply it
+        // Refresh the existing table when the filter changes.
         staffStatusFilter.addActionListener(e -> {
-            dashboardContent.add(buildStaffPanel(), "staff");
-            contentLayout.show(dashboardContent, "staff");
+            if (staffReportTable != null) {
+                refreshStaffTable(staffReportTable);
+            }
         });
 
         filterPanel.add(filterLabel);
@@ -1396,6 +1398,7 @@ public class DashboardPanel extends JPanel {
         };
 
         JTable table = new JTable(model);
+        staffReportTable = table;
         table.setRowHeight(50);
         table.setFont(new Font("SansSerif", Font.PLAIN, 14));
         table.setBackground(Color.WHITE);
