@@ -1995,14 +1995,21 @@ residentStatusFilter = new JComboBox<>(new String[]{"All Statuses", "PENDING", "
                 return;
             }
 
-            String newId = "U" + System.currentTimeMillis();
-
+            // Generate a unique number suffix (e.g., 4129)
+            String uniqueNum = String.valueOf(System.currentTimeMillis()).substring(7);
+            
+            //  Assign the prefix based on the role 
+            String newId = "";
             User newUser = null;
+            
             if ("Resident".equals(role)) {
+                newId = "R-" + uniqueNum;
                 newUser = new Resident(newId, fName, mName, lName, uname, pass, "Purok 1", "Sitio Central");
             } else if ("Barangay Staff".equals(role)) {
+                newId = "S-" + uniqueNum;
                 newUser = new BarangayStaff(newId, fName, mName, lName, uname, pass, "Community Officer");
             } else if ("Admin".equals(role)) {
+                newId = "A-" + uniqueNum;
                 newUser = new Admin(newId, fName, mName, lName, uname, pass, "Barangay Captain");
             }
 
